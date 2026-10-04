@@ -20,6 +20,9 @@
   --brand: #0b6cf5; --brand-soft: #e6f0ff; --hero-a: #0a5ce6; --hero-b: #27a4ff;
   --cta: #ff7a1a; --cta-hover: #ff6a00; --cta-ink: #ffffff;
   --ok: #0e9f5a; --ok-soft: #e2f6ec; --warn: #b36b00; --warn-soft: #fff2dc; --bad: #d8342b; --bad-soft: #fde7e5;
+  /* Price-age badges: darker ink on a stronger tint, so they read on the white ticket. */
+  --age-ok: #08683b; --age-ok-bg: #d4f1e1; --age-warn: #8a5200; --age-warn-bg: #ffe6bd;
+  --age-bad: #b3241c; --age-bad-bg: #fcd8d4; --age-info: #3f4d63; --age-info-bg: #e1e9f5;
   --radius: 16px; --radius-lg: 22px;
   --shadow: 0 1px 2px rgba(16,32,64,.06), 0 10px 28px rgba(16,32,64,.08);
   --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -35,6 +38,8 @@
     --brand: #5aa2ff; --brand-soft: #16284a; --hero-a: #0a3a94; --hero-b: #0d63d8;
     --cta: #ff8a33; --cta-hover: #ff9a4d; --cta-ink: #1b0f00;
     --ok: #4cd08c; --ok-soft: #10281d; --warn: #f2b35a; --warn-soft: #2d2313; --bad: #ff8a80; --bad-soft: #341a19;
+    --age-ok: #4cd08c; --age-ok-bg: #10281d; --age-warn: #f2b35a; --age-warn-bg: #2d2313;
+    --age-bad: #ff8a80; --age-bad-bg: #341a19; --age-info: #9fb0c9; --age-info-bg: #192849;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
   }
 }
@@ -161,6 +166,10 @@ button.pin.on { background: var(--brand-soft); border-color: var(--brand); color
 .tag.ok { background: var(--ok-soft); color: var(--ok); }
 .tag.warnage { background: var(--warn-soft); color: var(--warn); }
 .tag.info { background: var(--surface-2); color: var(--muted); }
+.tag.age.ok { background: var(--age-ok-bg); color: var(--age-ok); }
+.tag.age.warnage { background: var(--age-warn-bg); color: var(--age-warn); }
+.tag.age.above { background: var(--age-bad-bg); color: var(--age-bad); }
+.tag.age.info { background: var(--age-info-bg); color: var(--age-info); }
 .stops { display: inline-block; font-weight: 800; font-size: 11px; letter-spacing: .05em; border-radius: 6px; padding: 2px 8px; }
 .stops.s0 { background: var(--ok-soft); color: var(--ok); }
 .stops.s1 { background: var(--brand-soft); color: var(--brand); }
@@ -744,10 +753,10 @@ function priceAgeDays(seen) {
 }
 function ageBadge(seen) {
   const d = priceAgeDays(seen);
-  if (d == null) return `<span class="tag info">${t("age_unknown")}</span>`;
+  if (d == null) return `<span class="tag age info">${t("age_unknown")}</span>`;
   const text = d <= 0 ? t("age_today") : d === 1 ? t("age_yesterday") : t("age_days", { n: d });
   const cls = d <= 1 ? "ok" : d <= 3 ? "warnage" : "above";
-  return `<span class="tag ${cls}" title="${esc(t("age_title", { date: dlong(seen) }))}">🕒 ${text}</span>`;
+  return `<span class="tag age ${cls}" title="${esc(t("age_title", { date: dlong(seen) }))}">🕒 ${text}</span>`;
 }
 function stopsBadge(n) {
   const cls = n === 0 ? "s0" : n === 1 ? "s1" : n === 2 ? "s2" : "s3";
