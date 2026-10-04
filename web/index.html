@@ -1,0 +1,1418 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Самая дешёвая поездка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Windows has no flag emoji glyphs; this font covers only the flag code points. */
+@font-face {
+  font-family: "Twemoji Country Flags";
+  unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E0063, U+E0065, U+E0067, U+E006C, U+E006E, U+E0073-E0074, U+E0077, U+E007F;
+  src: url("https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1/dist/TwemojiCountryFlags.woff2") format("woff2");
+  font-display: swap;
+}
+:root {
+  --bg: #e2efff; --surface: #ffffff; --surface-2: #f1f7ff; --text: #0f1b2d; --muted: #5f6f88; --line: #d9e4f3;
+  --glow-a: rgba(64, 190, 255, .30); --glow-b: rgba(11, 108, 245, .14);
+  --brand: #0b6cf5; --brand-soft: #e6f0ff; --hero-a: #0a5ce6; --hero-b: #27a4ff;
+  --cta: #ff7a1a; --cta-hover: #ff6a00; --cta-ink: #ffffff;
+  --ok: #0e9f5a; --ok-soft: #e2f6ec; --warn: #b36b00; --warn-soft: #fff2dc; --bad: #d8342b; --bad-soft: #fde7e5;
+  --radius: 16px; --radius-lg: 22px;
+  --shadow: 0 1px 2px rgba(16,32,64,.06), 0 10px 28px rgba(16,32,64,.08);
+  --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  /* Sky blue in tone with the header, lit by two soft glows (an orange one turned the blue grey).
+     Pinned to the viewport so the ticket notches can repaint exactly the same pixels. */
+  --page-bg: radial-gradient(70vw 60vh at 100% 15%, var(--glow-a), transparent 70%),
+             radial-gradient(70vw 70vh at 0% 95%, var(--glow-b), transparent 70%), var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a1530; --surface: #13203d; --surface-2: #192849; --text: #e9eef6; --muted: #9fb0c9; --line: #26375a;
+    --glow-a: rgba(39, 164, 255, .16); --glow-b: rgba(13, 99, 216, .26);
+    --brand: #5aa2ff; --brand-soft: #16284a; --hero-a: #0a3a94; --hero-b: #0d63d8;
+    --cta: #ff8a33; --cta-hover: #ff9a4d; --cta-ink: #1b0f00;
+    --ok: #4cd08c; --ok-soft: #10281d; --warn: #f2b35a; --warn-soft: #2d2313; --bad: #ff8a80; --bad-soft: #341a19;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--text); background: var(--page-bg); background-attachment: fixed;
+  font: 15px/1.45 "Twemoji Country Flags", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 16px; }
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+input, select, button { font: inherit; }
+
+/* ── top bar ── */
+.topbar { background: var(--hero-a); color: #fff; }
+.topbar-in { display: flex; align-items: center; gap: 14px; min-height: 60px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -.01em; }
+.logo-mark { width: 34px; height: 34px; border-radius: 10px; background: #fff; color: var(--hero-a); display: grid;
+  place-items: center; font-size: 18px; transform: rotate(-12deg); flex: none; }
+.pills { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.pill { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.14);
+  display: inline-flex; align-items: center; gap: 6px; cursor: default; }
+.pill .dotc { width: 8px; height: 8px; border-radius: 50%; background: #44e08f; box-shadow: 0 0 0 3px rgba(68,224,143,.25); }
+.pill.off .dotc { background: #ff6b5e; box-shadow: 0 0 0 3px rgba(255,107,94,.25); }
+.lang-btn { background: rgba(255,255,255,.16); color: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 10px;
+  padding: 7px 12px; font-weight: 800; letter-spacing: .04em; cursor: pointer; }
+.lang-btn:hover { background: rgba(255,255,255,.26); }
+
+/* ── hero ── */
+.hero { background: linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 100%); color: #fff; padding: 22px 0 92px;
+  position: relative; overflow: hidden; }
+.hero::after { content: "✈"; position: absolute; right: 5%; top: 6px; font-size: 200px; opacity: .08;
+  transform: rotate(-18deg); pointer-events: none; }
+.hero h1 { font-size: 40px; line-height: 1.08; margin: 14px 0 10px; letter-spacing: -.025em; max-width: 780px; }
+.hero .sub { margin: 0 0 20px; opacity: .92; font-size: 16px; max-width: 720px; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab { border: 0; background: rgba(255,255,255,.16); color: #fff; padding: 9px 16px; border-radius: 999px; cursor: pointer; font-weight: 700; }
+.tab:hover { background: rgba(255,255,255,.24); }
+.tab.active { background: #fff; color: var(--hero-a); }
+.searchbar { display: flex; gap: 8px; background: #fff; border-radius: var(--radius-lg); padding: 8px;
+  box-shadow: 0 14px 34px rgba(0,30,90,.28); position: relative; z-index: 1; }
+.searchbar input { flex: 1; border: 0; font-size: 16px; padding: 12px 14px; background: transparent; color: #0f1b2d; min-width: 0; }
+.searchbar input::placeholder { color: #8391a7; }
+.searchbar input:focus { outline: none; }
+.searchbar .ghost { background: #eef3fb; color: #0f1b2d; border: 0; }
+.examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; font-size: 13px; position: relative; z-index: 1; }
+.examples .ex-label { opacity: .85; margin-right: 2px; }
+.example { background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 999px;
+  padding: 5px 12px; cursor: pointer; font-size: 13px; }
+.example:hover { background: rgba(255,255,255,.28); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; position: relative; z-index: 1; }
+.chip { background: rgba(255,255,255,.94); color: #0f1b2d; border-radius: 999px; padding: 4px 11px; font-size: 13px; font-weight: 500; }
+
+/* ── buttons ── */
+.cta { background: var(--cta); color: var(--cta-ink); border: 0; border-radius: 14px; padding: 0 26px; font-size: 17px;
+  font-weight: 800; cursor: pointer; min-height: 50px; letter-spacing: .01em; transition: background .12s, transform .12s; }
+.cta:hover { background: var(--cta-hover); }
+.cta:active { transform: translateY(1px); }
+.cta:disabled { opacity: .6; cursor: progress; }
+.ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+  cursor: pointer; font-weight: 600; }
+.ghost:hover { border-color: var(--brand); }
+
+/* ── main & search form ── */
+main.wrap { margin-top: -66px; position: relative; padding-bottom: 64px; }
+.panel { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 18px; margin-bottom: 16px; }
+.form-card { padding: 14px; }
+.seg-grid { display: grid; grid-template-columns: 1.15fr 1.15fr 1fr 1.25fr auto; gap: 8px; align-items: stretch; }
+.seg-grid2 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.seg { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px 10px; display: flex;
+  flex-direction: column; gap: 4px; min-width: 0; transition: border-color .12s, box-shadow .12s; }
+.seg:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); background: var(--surface); }
+.seg > .lbl { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.seg input, .seg select { border: 0; background: transparent; padding: 2px 0; font-size: 16px; font-weight: 600; color: var(--text);
+  width: 100%; min-width: 0; }
+.seg input:focus, .seg select:focus { outline: none; }
+.seg input::placeholder { color: var(--muted); font-weight: 500; }
+.seg input:disabled { opacity: .55; }
+.seg .sub-input { font-size: 13px; font-weight: 500; border-top: 1px dashed var(--line); padding-top: 6px; margin-top: 2px; }
+.seg .row { display: flex; gap: 6px; align-items: center; }
+.seg .row input { flex: 1; }
+.seg .row select { width: auto; }
+.seg .hint { font-size: 12px; color: var(--muted); font-weight: 500; }
+#whenDates { flex-direction: column; align-items: stretch; gap: 2px; }
+#whenDates input { font-size: 14px; }
+.seg .mini { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.seg .mini select { font-size: 13px; font-weight: 600; width: auto; color: var(--text); }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); font-weight: 500; }
+.check input { width: auto; }
+details.more { margin-top: 10px; }
+details.more summary { cursor: pointer; color: var(--brand); font-weight: 700; font-size: 14px; padding: 4px 2px; }
+details.more .seg-grid2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* ── banners, progress ── */
+.banner { border-radius: 14px; padding: 11px 14px; margin: 0 0 12px; font-size: 14px; }
+.banner.bad { background: var(--bad-soft); color: var(--bad); }
+.banner.warn { background: var(--warn-soft); color: var(--warn); }
+.banner.ok { background: var(--ok-soft); color: var(--ok); }
+.banner.info { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+h3 { margin: 0 0 10px; font-size: 17px; }
+.stages { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.stage { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: none; }
+.stage.active .dot { background: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
+.stage.done .dot { background: var(--ok); }
+.stage.active .name { font-weight: 800; }
+.stage .msg { color: var(--muted); font-size: 13px; margin-left: auto; text-align: right; }
+.bar { height: 5px; background: var(--surface-2); border-radius: 5px; overflow: hidden; margin-top: 12px; }
+.bar > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--hero-a), var(--hero-b)); transition: width .3s; }
+
+/* ── live monitoring ── */
+.live { font-size: 13px; padding: 6px 10px; border-radius: 10px; background: var(--surface-2); }
+.live.ok { color: var(--ok); } .live.changed { color: var(--warn); } .live.gone { color: var(--bad); }
+.live.pending { color: var(--muted); }
+.pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: 6px;
+  animation: pulse 1.6s infinite; vertical-align: middle; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: .25; } 100% { opacity: 1; } }
+.up { color: var(--bad); } .down { color: var(--ok); }
+button.pin { font-size: 14px; font-weight: 700; }
+button.pin.on { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); }
+
+/* ── tags & badges ── */
+.tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 8px; }
+.tag.above { background: var(--bad-soft); color: var(--bad); }
+.tag.ok { background: var(--ok-soft); color: var(--ok); }
+.tag.warnage { background: var(--warn-soft); color: var(--warn); }
+.tag.info { background: var(--surface-2); color: var(--muted); }
+.stops { display: inline-block; font-weight: 800; font-size: 11px; letter-spacing: .05em; border-radius: 6px; padding: 2px 8px; }
+.stops.s0 { background: var(--ok-soft); color: var(--ok); }
+.stops.s1 { background: var(--brand-soft); color: var(--brand); }
+.stops.s2 { background: var(--warn-soft); color: var(--warn); }
+.stops.s3 { background: var(--bad-soft); color: var(--bad); font-size: 12px; }
+.badge { display: inline-block; font-size: 12px; font-weight: 800; padding: 5px 11px; border-radius: 8px; letter-spacing: .03em; }
+.badge.best { background: var(--ok-soft); color: var(--ok); }
+.badge.alt { background: var(--brand-soft); color: var(--brand); }
+.kicker { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+
+/* ── the ticket ── */
+.ticket { display: grid; grid-template-columns: minmax(0, 1fr) 300px; background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); margin-bottom: 16px; }
+.ticket-main { padding: 18px 22px; min-width: 0; }
+.ticket-side { padding: 20px 22px; border-left: 2px dashed var(--line); position: relative; display: flex; flex-direction: column; gap: 12px; }
+.ticket-side::before, .ticket-side::after { content: ""; position: absolute; left: -12px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--page-bg); background-attachment: fixed; }
+.ticket-side::before { top: -11px; }
+.ticket-side::after { bottom: -11px; }
+.ticket-head { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.dest-title { font-size: 30px; font-weight: 900; letter-spacing: -.025em; line-height: 1.1; }
+.dest-title .country { font-size: 17px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+.dates-line { color: var(--muted); font-size: 14px; margin: 4px 0 8px; }
+.flight { display: grid; grid-template-columns: 120px minmax(0, 1fr) 120px 110px; gap: 6px 14px; align-items: center; padding: 14px 0;
+  border-top: 1px solid var(--line); }
+.fl-leg { font-size: 11px; font-weight: 800; letter-spacing: .07em; color: var(--muted); text-transform: uppercase; grid-column: 1 / -1; }
+.fl-time { font-size: 24px; font-weight: 800; letter-spacing: -.01em; }
+.fl-city { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fl-side.right { text-align: right; }
+.fl-mid { text-align: center; font-size: 12px; color: var(--muted); }
+.fl-line { position: relative; height: 2px; background: var(--line); margin: 10px 8px 10px 6px; }
+.fl-line::before { content: ""; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); }
+.fl-line .stopdot { position: absolute; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface);
+  border: 3px solid var(--warn); transform: translateX(-50%); }
+.fl-line .plane { position: absolute; right: -10px; top: -12px; font-size: 18px; color: var(--brand); transform: rotate(45deg); }
+.fl-price { text-align: right; font-weight: 800; font-size: 18px; }
+.fl-price .air { font-size: 12px; color: var(--muted); font-weight: 600; }
+.fl-meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; }
+.fl-wide { grid-column: 1 / -1; }
+.hotel-row { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0;
+  border-top: 1px solid var(--line); }
+.hotel-ico { width: 46px; height: 46px; border-radius: 14px; background: var(--brand-soft); display: grid; place-items: center; font-size: 22px; }
+.hotel-name { font-weight: 800; font-size: 16px; }
+.price-big { font-size: 38px; font-weight: 900; letter-spacing: -.03em; line-height: 1; margin-top: 6px; }
+.side-lines { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; font-size: 13px; padding-top: 10px; border-top: 1px solid var(--line); }
+.side-lines .v { text-align: right; font-weight: 700; }
+.side-btns { display: grid; gap: 8px; }
+a.btn { display: block; text-align: center; text-decoration: none; background: var(--cta); color: var(--cta-ink); font-weight: 800;
+  padding: 12px; border-radius: 12px; font-size: 14px; letter-spacing: .01em; }
+a.btn:hover { background: var(--cta-hover); }
+a.btn.secondary { background: var(--brand-soft); color: var(--brand); }
+a.btn.tg { background: #229ed9; color: #fff; }
+a.btn.tg:hover { background: #1b8cc4; }
+.tg-slot:empty { display: none; }
+.tg-slot .small { margin-top: 6px; }
+.tg-note { color: var(--ok); font-weight: 700; }
+#tgLine:empty { display: none; }
+#tgLine { margin-bottom: 10px; }
+button.linkish { background: none; border: 0; padding: 0; min-height: 0; color: var(--brand); font: inherit; font-weight: 700;
+  cursor: pointer; text-decoration: underline; }
+span.btn.off { display: block; text-align: center; background: var(--surface-2); color: var(--muted); padding: 12px; border-radius: 12px;
+  font-size: 14px; font-weight: 700; }
+ul.warns { margin: 12px 0 0; padding: 10px 14px 10px 30px; font-size: 13px; color: var(--warn); background: var(--warn-soft); border-radius: 12px; }
+
+/* ── destination tiles ── */
+.section-title { font-size: 22px; font-weight: 900; margin: 30px 0 12px; letter-spacing: -.02em; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border-radius: 18px; padding: 16px; cursor: pointer; position: relative; box-shadow: var(--shadow);
+  border: 2px solid transparent; transition: transform .12s, border-color .12s; }
+.tile:hover { transform: translateY(-3px); border-color: var(--brand); }
+.tile-tag { position: absolute; top: 12px; right: 12px; }
+.tile-flag { font-size: 32px; line-height: 1; }
+.tile-city { font-weight: 900; font-size: 19px; margin-top: 10px; letter-spacing: -.01em; }
+.tile-country { color: var(--muted); font-size: 13px; }
+.tile-dates { font-size: 13px; margin-top: 8px; font-weight: 600; }
+.tile-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.tile-price { margin-top: 12px; font-size: 24px; font-weight: 900; letter-spacing: -.02em; }
+.tile-price small { font-size: 12px; font-weight: 600; color: var(--muted); display: block; letter-spacing: 0; }
+
+/* ── tables & info ── */
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); cursor: pointer; user-select: none; }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:hover td { background: var(--surface-2); }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 5px 16px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+details.panel > summary { cursor: pointer; }
+code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--brand); }
+
+/* ── responsive ── */
+@media (max-width: 960px) {
+  .seg-grid { grid-template-columns: 1fr 1fr; }
+  .seg-grid .cta { grid-column: 1 / -1; }
+  .seg-grid2 { grid-template-columns: 1fr 1fr; }
+  .ticket { grid-template-columns: 1fr; }
+  .ticket-side { border-left: 0; border-top: 2px dashed var(--line); }
+  .ticket-side::before, .ticket-side::after { display: none; }
+}
+@media (max-width: 620px) {
+  .hero h1 { font-size: 29px; }
+  .hero::after { font-size: 120px; }
+  .searchbar { flex-wrap: wrap; }
+  .searchbar input { flex-basis: 100%; }
+  .searchbar button { flex: 1; min-height: 44px; }
+  .seg-grid, .seg-grid2, details.more .seg-grid2 { grid-template-columns: 1fr; }
+  .flight { grid-template-columns: 78px minmax(0, 1fr) 78px; }
+  .fl-price { grid-column: 1 / -1; text-align: left; }
+  .fl-time { font-size: 20px; }
+  .dest-title { font-size: 25px; }
+  .pills { order: 3; margin-left: 0; width: 100%; }
+  .stage { flex-wrap: wrap; }
+  .stage .msg { flex-basis: 100%; margin-left: 20px; text-align: left; }
+  .hero .sub { font-size: 15px; }
+  .panel { padding: 14px; }
+  .ticket-main, .ticket-side { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap topbar-in">
+  <div class="logo"><span class="logo-mark">✈</span><span data-i18n="title">Самая дешёвая поездка</span></div>
+  <div class="pills" id="providerPills"></div>
+  <button class="lang-btn" id="langBtn" type="button">EN</button>
+</div></header>
+
+<section class="hero"><div class="wrap">
+  <div class="tabs">
+    <button class="tab active" data-tab="trip" data-i18n="tab_trip">🔎 Найти самую дешёвую поездку</button>
+    <button class="tab" data-tab="destinations" data-i18n="tab_dest">🌍 Куда дешевле всего поехать?</button>
+  </div>
+  <h1 data-i18n="hero_title">Найдём самую дешёвую поездку целиком</h1>
+  <p class="sub" data-i18n="hero_sub"></p>
+  <div class="searchbar">
+    <input id="nlText" data-i18n-ph="nl_ph" aria-label="query">
+    <button class="ghost" id="nlParse" type="button" data-i18n="nl_parse">Разобрать</button>
+    <button class="cta" id="nlGo" type="button" data-i18n="nl_go">Найти</button>
+  </div>
+  <div class="examples" id="examples"></div>
+  <div class="chips" id="nlNotes"></div>
+</div></section>
+
+<main class="wrap">
+  <div id="providerBanners"></div>
+  <form class="panel form-card" id="form" autocomplete="off">
+    <div class="seg-grid">
+      <label class="seg"><span class="lbl" data-i18n="f_from">Откуда</span>
+        <input id="origin" list="placesList" value="Россия" data-i18n-ph="ph_origin">
+        <input id="excludeOrigin" class="sub-input" list="placesList" data-i18n-ph="ph_excl_origin">
+      </label>
+      <label class="seg"><span class="lbl" data-i18n="f_to">Куда</span>
+        <input id="destination" list="placesList" value="Куда угодно" data-i18n-ph="ph_dest">
+        <input id="excludeDest" class="sub-input" list="placesList" data-i18n-ph="ph_excl_dest">
+      </label>
+      <div class="seg"><span class="lbl" data-i18n="f_when">Когда</span>
+        <select id="when">
+          <option value="anytime">—</option>
+          <option value="1" data-i18n="next_1">—</option>
+          <option value="3" data-i18n="next_3">—</option>
+          <option value="6" data-i18n="next_6">—</option>
+          <option value="12" data-i18n="next_12">—</option>
+          <option value="month" data-i18n="when_month">—</option>
+          <option value="dates" data-i18n="when_dates">—</option>
+        </select>
+        <input id="whenMonth" type="month" class="hidden">
+        <div class="row hidden" id="whenDates"><input id="dateFrom" type="date"><input id="dateTo" type="date"></div>
+      </div>
+      <div class="seg"><span class="lbl" data-i18n="f_length">Длительность</span>
+        <select id="length">
+          <option value="flex">—</option>
+          <option value="2" data-nights="2"></option><option value="3" data-nights="3"></option>
+          <option value="4" data-nights="4"></option><option value="5" data-nights="5"></option>
+          <option value="7" data-nights="7"></option><option value="10" data-nights="10"></option>
+          <option value="14" data-nights="14"></option><option value="21" data-nights="21"></option>
+          <option value="30" data-nights="30"></option>
+          <option value="range" selected data-i18n="length_range">—</option>
+        </select>
+        <div class="row" id="lengthRange"><input id="nMin" type="number" min="2" max="30" value="3"> – <input id="nMax" type="number" min="2" max="30" value="7"></div>
+        <span class="hint" id="lengthHint"></span>
+        <span class="mini"><span data-i18n="min_label">Не короче:</span>
+          <select id="minNights" data-i18n-title="min_title">
+            <option value="" data-i18n="min_any">—</option>
+            <option value="3" data-i18n="min_3">—</option>
+            <option value="4" data-i18n="min_4">—</option>
+            <option value="5" data-i18n="min_5">—</option>
+            <option value="7" data-i18n="min_7">—</option>
+            <option value="10" data-i18n="min_10">—</option>
+            <option value="14" data-i18n="min_14">—</option>
+            <option value="21" data-i18n="min_21">—</option>
+          </select></span>
+      </div>
+      <button class="cta" id="go" type="submit">—</button>
+    </div>
+    <div class="seg-grid2">
+      <div class="seg"><span class="lbl" data-i18n="f_flight_budget">Бюджет на перелёт (туда + обратно)</span>
+        <input id="flightBudget" type="number" min="0" step="100" data-i18n-ph="no_limit_short" disabled>
+        <span class="check"><input type="checkbox" id="flightNoLimit" checked> <span data-i18n="no_limit">Без ограничений</span></span>
+        <span class="check"><input type="checkbox" id="showAbove"> <span data-i18n="show_above">Показывать варианты дороже бюджета</span></span>
+      </div>
+      <div class="seg"><span class="lbl" data-i18n="f_hotel_budget">Бюджет на отель за ночь</span>
+        <div class="row"><input id="hotelBudget" type="number" min="0" step="1" value="40">
+          <select id="hotelCur"><option>USD</option><option>EUR</option><option>RUB</option></select></div>
+        <span class="check"><input type="checkbox" id="hotelNoLimit"> <span data-i18n="no_limit">Без ограничений</span></span>
+      </div>
+      <label class="seg"><span class="lbl" data-i18n="f_total_budget">Бюджет на всю поездку</span>
+        <input id="totalBudget" type="number" min="0" step="100" data-i18n-ph="no_limit_short">
+      </label>
+      <label class="seg"><span class="lbl" data-i18n="f_currency">Валюта</span>
+        <select id="currency"><option>RUB</option><option>USD</option><option>EUR</option></select>
+      </label>
+      <label class="seg"><span class="lbl" data-i18n="f_freshness">Свежесть цены</span>
+        <select id="freshness">
+          <option value="0" data-i18n="fresh_0">—</option>
+          <option value="1" data-i18n="fresh_1">—</option>
+          <option value="2" selected data-i18n="fresh_2">—</option>
+          <option value="3" data-i18n="fresh_3">—</option>
+          <option value="7" data-i18n="fresh_7">—</option>
+          <option value="365" data-i18n="fresh_any">—</option>
+        </select>
+      </label>
+    </div>
+    <details class="more">
+      <summary data-i18n="more">Отель, пересадки и другие условия</summary>
+      <div class="seg-grid2">
+        <label class="seg"><span class="lbl" data-i18n="f_rating">Рейтинг отеля</span>
+          <select id="rating"><option value="" data-i18n="any_m">—</option><option value="3" data-i18n="rating_3">—</option>
+            <option value="4" data-i18n="rating_4">—</option><option value="4.5" data-i18n="rating_45">—</option></select>
+        </label>
+        <label class="seg"><span class="lbl" data-i18n="f_distance">Расстояние до центра</span>
+          <select id="distance"><option value="" data-i18n="any_n">—</option><option value="1" data-i18n="dist_1">—</option>
+            <option value="3" data-i18n="dist_3">—</option><option value="5" data-i18n="dist_5">—</option>
+            <option value="10" data-i18n="dist_10">—</option></select>
+        </label>
+        <div class="seg"><span class="lbl" data-i18n="f_room">Номер и завтрак</span>
+          <span class="check"><input type="checkbox" id="privateRoom"> <span data-i18n="private_room">Отдельный номер</span></span>
+          <span class="check"><input type="checkbox" id="breakfast"> <span data-i18n="breakfast">Завтрак</span></span>
+        </div>
+        <label class="seg"><span class="lbl" data-i18n="f_stops">Пересадки</span>
+          <select id="maxStops"><option value="" data-i18n="no_limit">—</option><option value="0" data-i18n="direct_only">—</option>
+            <option value="1">≤ 1</option><option value="2">≤ 2</option><option value="3">≤ 3</option></select>
+        </label>
+        <label class="seg"><span class="lbl" data-i18n="f_domestic">Внутренние направления</span>
+          <select id="domestic"><option value="" data-i18n="dom_auto">—</option><option value="false" data-i18n="dom_abroad">—</option>
+            <option value="true" data-i18n="dom_incl">—</option></select>
+        </label>
+        <div class="seg"><span class="lbl" data-i18n="f_weather">Погода</span>
+          <span class="check"><input type="checkbox" id="warm"> <span data-i18n="warm_only">Только тёплые места</span></span>
+        </div>
+      </div>
+    </details>
+  </form>
+  <datalist id="placesList"></datalist>
+
+  <section class="panel hidden" id="progress">
+    <h3 data-i18n="deep_search">Глубокий поиск</h3>
+    <ul class="stages" id="stages"></ul>
+    <div class="bar"><div id="barFill"></div></div>
+  </section>
+
+  <div id="error" class="banner bad hidden"></div>
+  <div id="watchBar" class="banner info hidden"></div>
+  <div id="results"></div>
+  <section class="panel hidden" id="watchPanel">
+    <h3 data-i18n="watch_title">📡 База отслеживаемых билетов</h3>
+    <div class="small muted" style="margin-bottom:8px" data-i18n="watch_desc"></div>
+    <div class="small" id="tgLine"></div>
+    <div class="tablewrap" id="watchTable"></div>
+  </section>
+</main>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+// ── language ────────────────────────────────────────────────────────────────
+// Site, airline and hotel names are never translated; place names come from the server in the chosen language.
+const I18N = {
+  ru: {
+    page_title: "Самая дешёвая поездка", title: "Самая дешёвая поездка",
+    subtitle: "перелёт туда + обратно + отель + обязательные сборы",
+    tagline: "Не выбирайте, куда ехать, — алгоритм сам найдёт самую дешёвую реальную поездку.",
+    lang_btn: "EN", lang_btn_title: "Switch to English",
+    tab_trip: "🔎 Найти самую дешёвую поездку", tab_dest: "🌍 Куда дешевле всего поехать?",
+    nl_label: "Опишите поездку словами",
+    nl_ph: "Хочу из России куда-нибудь в Азию на 5 дней в течение ближайших 3 месяцев, перелёт максимум 25 000 рублей, отель максимум $40",
+    nl_parse: "Разобрать", nl_go: "Найти",
+    f_from: "Откуда", f_to: "Куда", f_when: "Когда", f_length: "Длительность",
+    ph_origin: "Город, страна, регион; несколько — через запятую", ph_excl_origin: "Кроме: например Москва, Санкт-Петербург",
+    ph_dest: "Куда угодно; несколько — через запятую", ph_excl_dest: "Кроме: например Минск, Беларусь",
+    default_origin: "Россия", default_dest: "Куда угодно",
+    anytime: "В любое время (ближайшие {n} мес.)", next_1: "Ближайший месяц", next_3: "Ближайшие 3 месяца",
+    next_6: "Ближайшие 6 месяцев", next_12: "Ближайшие 12 месяцев", next_n: "Ближайшие {n} мес.",
+    when_month: "Конкретный месяц…", when_dates: "Даты вылета…",
+    flexible: "Гибко ({lo}–{hi} ночей)", length_range: "Диапазон…", length_hint: "от {lo} до {hi} ночей",
+    min_label: "Не короче:", min_title: "Показывать только поездки не короче выбранного",
+    min_any: "любая длительность", min_3: "от 3 ночей", min_4: "от 4 ночей", min_5: "от 5 ночей", min_7: "от недели",
+    min_10: "от 10 ночей", min_14: "от 2 недель", min_21: "от 3 недель",
+    f_flight_budget: "Бюджет на перелёт (туда + обратно)", no_limit: "Без ограничений",
+    show_above: "Показывать варианты дороже бюджета", f_hotel_budget: "Бюджет на отель за ночь",
+    f_total_budget: "Бюджет на всю поездку", f_currency: "Валюта", f_freshness: "Свежесть цены",
+    fresh_0: "Только сегодняшние", fresh_1: "До 1 дня", fresh_2: "До 2 дней", fresh_3: "До 3 дней",
+    fresh_7: "До 7 дней", fresh_any: "Любая",
+    more: "Отель, пересадки и другие условия", f_rating: "Рейтинг отеля", any_m: "Любой",
+    rating_3: "3+ из 5", rating_4: "4+ из 5", rating_45: "4.5+ из 5",
+    f_distance: "Расстояние до центра", any_n: "Любое", dist_1: "≤ 1 км", dist_3: "≤ 3 км", dist_5: "≤ 5 км", dist_10: "≤ 10 км",
+    f_room: "Номер и завтрак", private_room: "Отдельный номер", breakfast: "Завтрак",
+    f_stops: "Пересадки", direct_only: "Только прямые",
+    f_domestic: "Внутренние направления", dom_auto: "Авто", dom_abroad: "Только за границу", dom_incl: "Включая внутренние",
+    f_weather: "Погода", warm_only: "Только тёплые места",
+    go_trip: "НАЙТИ ПОЕЗДКУ", go_dest: "НАЙТИ НАПРАВЛЕНИЯ",
+    deep_search: "Глубокий поиск",
+    st_UNDERSTAND: "Условия", st_UNDERSTAND_d: "Понять условия и жёсткие ограничения",
+    st_DISCOVERY: "Направления", st_DISCOVERY_d: "Найти кандидатные направления и даты",
+    st_CANDIDATES: "Отбор", st_CANDIDATES_d: "Отобрать перспективные направления",
+    st_ROUTES: "Маршруты", st_ROUTES_d: "Реальные маршруты туда и обратно, все варианты пересадок",
+    st_COMBINE: "Сочетания", st_COMBINE_d: "Сочетать туда + обратно, проверить стыковки",
+    st_HOTELS: "Отели", st_HOTELS_d: "Найти отели",
+    st_TOTAL: "Итог", st_TOTAL_d: "Посчитать полную стоимость",
+    st_REVALIDATE: "Перепроверка", st_REVALIDATE_d: "Перепроверить цены лучших вариантов",
+    st_RANK: "Сортировка", st_RANK_d: "Отсортировать по полной стоимости поездки",
+    connected: "{name}: подключён", error_n: "Ошибка {n}", check_fields: "Проверьте поля формы: ",
+    kind_region: "регион", kind_state: "штат/область", kind_country: "страна", kind_city: "город", kind_airport: "аэропорт",
+    hours_min: "{h} ч {m} мин",
+    age_unknown: "возраст цены неизвестен", age_today: "цену видели сегодня", age_yesterday: "цену видели вчера",
+    age_days: "цену видели {n} дн. назад", age_title: "Когда пользователи Aviasales последний раз видели эту цену ({date})",
+    direct: "БЕЗ ПЕРЕСАДОК",
+    self_transfer: "⚠️ САМОСТОЯТЕЛЬНАЯ ПЕРЕСАДКА / ОТДЕЛЬНЫЕ БИЛЕТЫ", airport_change: "Смена аэропорта при пересадке",
+    segments_unknown: "Города пересадок, смена аэропорта и самостоятельные пересадки: провайдер их не сообщает, смотрите на странице билета.",
+    dep: "вылет", arr: "прилёт", on_way: "в пути", sold_by: "продаёт: {seller}",
+    live_pending: "⏳ ждёт первой проверки мониторингом",
+    hotel_h: "🏨 ОТЕЛЬ · {nights}", reviews: "★ {r}/5 TripAdvisor ({n} отз.)", no_reviews: "нет отзывов",
+    km_centre: "{n} км от центра", rating_only: "★ {r}/5 TripAdvisor", no_limit_short: "без лимита", per_night: "{money}/ночь", total_word: "{money} всего",
+    cheapest_at: "дешевле всего: <b>{site}</b>", optional: " (опционально)", checked_at: "проверено {when}",
+    hotel_not_checked: "Отель не проверялся", hotel_no_data: "Нет данных об отелях",
+    hotel_not_connected: "Источник отелей не подключён",
+    above_budget: "Дороже бюджета", rechecked: "✓ перепроверено: {note}", from_city: "вылет из {city}",
+    leg_out: "✈️ ПЕРЕЛЁТ — ТУДА", leg_ret: "✈️ ПЕРЕЛЁТ — ОБРАТНО", total_h: "💰 ПОЛНАЯ СТОИМОСТЬ ПОЕЗДКИ",
+    flights_row: "Перелёт (туда + обратно)", hotel_row: "Отель", hotel_row_n: "Отель ({nights})",
+    hotel_excluded_nc: "не включён — не проверялся", hotel_excluded_nd: "не включён — нет данных",
+    mandatory_fees: "Обязательные сборы", optional_fees: "Опциональные платежи (не в итоге)",
+    total_row: "Итого", flights_only: "(только перелёты)",
+    prices_checked: "Цены проверены: {when} · {provider} · туда и обратно — два отдельных билета",
+    btn_out: "БИЛЕТ ТУДА →", btn_ret: "БИЛЕТ ОБРАТНО ←", btn_hotel: "ОТЕЛЬ НА TRIPADVISOR", btn_hotel_off: "ОТЕЛЬ — нет данных",
+    pin_on: "📌 Отслеживается постоянно", pin_off: "📌 Следить постоянно",
+    tg_connect: "🔔 Уведомления в Telegram", tg_waiting: "Откройте Telegram и нажмите «Старт» — жду подтверждения…",
+    tg_on_pinned: "🔔 Изменения цены придут в Telegram", tg_on_unpinned: "🔔 Telegram подключён — нажмите «Следить», чтобы получать уведомления",
+    tg_line_on: "🔔 Telegram подключён: пришлю, если у билетов с 📌 изменится цена или они пропадут.",
+    tg_line_off: "🔔 Изменения цен отслеживаемых билетов можно получать в Telegram.",
+    tg_unlink: "отключить", tg_link_btn: "подключить",
+    other_hotel: " + отель {money}/ночь", other_flight: "перелёт {money}", other_from: "из {city}",
+    stops_pair: "пересадки {a}/{b}", with_hotel: "с отелем", without_hotel: "без отеля",
+    col_dest: "Направление", col_dates: "Даты", col_out: "Туда", col_ret: "Обратно", col_hotel: "Отель/ночь",
+    col_nights: "Ночей", col_total: "Итого",
+    info_summary: "Как искали: источники, лимиты, статистика",
+    i_from: "Откуда", i_to: "Куда", i_exceptFrom: "Кроме (откуда)", i_exceptTo: "Кроме (куда)", i_when: "Когда",
+    i_tripLength: "Длительность", i_flightBudget: "Бюджет на перелёт", i_hotelBudget: "Бюджет на отель",
+    i_totalBudget: "Бюджет на поездку", i_showAboveBudget: "Показывать дороже бюджета", i_stops: "Пересадки",
+    i_domestic: "Внутренние направления", i_weather: "Погода", i_priceFreshness: "Свежесть цен", i_currency: "Валюта",
+    i_origin_cities: "Города вылета", i_of: "{a} из {b}", i_months: "Месяцы", i_found: "Направлений найдено",
+    i_found_v: "{n}, глубоко разобрано: {k}", i_combos: "Сочетаний туда+обратно", i_api: "Запросов к API",
+    i_api_v: "{net} сеть · {cache} из кэша · 429: {rl} · {sec} с", i_fx: "Курс валют",
+    i_fx_v: "1 {base} = {rate} {quote} · {src} · курс на {date}, получен {when}", i_fx_none: "Конвертация не понадобилась",
+    limits_h: "Ограничения поиска",
+    cheapest_trip: "✈️ + 🏨 САМАЯ ДЕШЁВАЯ ПОЕЗДКА", other_dates: "Другие даты: {city}",
+    other_dest: "Другие дешёвые направления",
+    mixed_note: "Сначала — поездки с проверенной ценой отеля, ниже — где цены отеля нет (итог только за перелёт).",
+    dest_h: "Куда дешевле всего поехать", compare_h: "Сравнение поездок", option_k: "{flag} ВАРИАНТ",
+    ago_never: "ещё не проверялся", ago_s: "{n} с назад", ago_m: "{n} мин назад", ago_h: "{n} ч назад",
+    alt_now: " · сейчас самый дешёвый в этот день: {link}", gone: "🔴 билет пропал из данных Aviasales{at}",
+    gone_at: " в {t}", checked_ago: "проверено {ago}",
+    price_changed: "цена изменилась: {old} → <b>{new}</b>", price_same: "цена без изменений", on_sale: "в продаже",
+    total_gone: "⚠ один из билетов пропал из данных Aviasales — этот итог больше не действителен",
+    total_updated: "обновлено мониторингом: {d} к цене поиска", verified_ago: "сверено с Aviasales {ago}", verified: "сверено {ago}",
+    paused: "⏸ Мониторинг цен на паузе: {why}", paused_no_token: "нет TRAVELPAYOUTS_TOKEN",
+    paused_searching: "идёт поиск — мониторинг ждёт, чтобы не превысить лимит API",
+    paused_quota: "экономлю лимит Aviasales для поисков (осталось {left} запросов в эту минуту)",
+    watch_idle: "🔄 Мониторинг цен работает каждые {s} с — начнёт следить за вашими билетами после поиска",
+    watch_rot: " (всего на сайте {total}; за цикл {req} из {groups} рейсов-дней, по кругу)",
+    watch_last: "последний цикл {ago}: {req} запр. за {sec} с", watch_changes: ", изменений: {n}", watch_errors: ", ошибок: {n}",
+    watch_first: "первый цикл ещё не прошёл",
+    watch_bar: "<b>Мониторинг цен</b>: каждые {s} с · ваших билетов: {n}{rot} · {last}",
+    k_gone: "пропал", k_back: "вернулся: {price}", cheapest_now: "самый дешёвый на эту дату сейчас: {price}",
+    err_empty_answer: "провайдер вернул пустой ответ по этому рейсу-дню",
+    w_route: "Рейс", w_dep: "Вылет", w_flight: "Рейс №", w_stops: "Пересадки", w_first: "При поиске", w_now: "Сейчас",
+    w_status: "Статус", w_seen: "Цену видели", w_checked: "Проверено", w_changes: "Изменения", w_open: "открыть",
+    s_gone: "🔴 пропал", s_sale: "🟢 в продаже",
+    watch_title: "📡 База отслеживаемых билетов",
+    watch_desc: "Каждый билет заново сверяется с Aviasales в обход кэша. Статус «в продаже» означает, что билет есть в данных Aviasales; живую цену и места подтверждает страница бронирования.",
+    hero_title: "Найдём самую дешёвую поездку целиком",
+    hero_sub: "Перелёт туда и обратно + отель + обязательные сборы. Вы задаёте условия — алгоритм сам выбирает, куда и когда лететь.",
+    ex_label: "Например:", ex1: "Из Москвы куда угодно на выходные", ex2: "Тёплое место в январе на неделю до 80 000 ₽ с отелем",
+    ex3: "Из Питера в Азию от 2 недель, отель до $40", ex4: "Из России в Стамбул или Тбилиси на 3-5 ночей",
+    for_trip: "за всю поездку, {nights}",
+  },
+  en: {
+    page_title: "Cheapest Trip", title: "Cheapest Trip",
+    subtitle: "flights out + back + hotel + mandatory fees",
+    tagline: "Don't choose where to go. Let the algorithm find the cheapest real trip you can take.",
+    lang_btn: "RU", lang_btn_title: "Переключить на русский",
+    tab_trip: "🔎 Find me the cheapest trip", tab_dest: "🌍 Where can I travel cheapest?",
+    nl_label: "Describe your trip in words",
+    nl_ph: "From Russia to anywhere in Asia for 5 days within the next 3 months, flights up to 25,000 rubles, hotel up to $40",
+    nl_parse: "Parse", nl_go: "Search",
+    f_from: "From", f_to: "To", f_when: "When", f_length: "Trip length",
+    ph_origin: "City, country, region; several — comma-separated", ph_excl_origin: "Except: e.g. Moscow, Saint Petersburg",
+    ph_dest: "Anywhere; several — comma-separated", ph_excl_dest: "Except: e.g. Minsk, Belarus",
+    default_origin: "Russia", default_dest: "Anywhere",
+    anytime: "Anytime (next {n} months)", next_1: "Next month", next_3: "Next 3 months",
+    next_6: "Next 6 months", next_12: "Next 12 months", next_n: "Next {n} months",
+    when_month: "A specific month…", when_dates: "Departure dates…",
+    flexible: "Flexible ({lo}–{hi} nights)", length_range: "Range…", length_hint: "{lo} to {hi} nights",
+    min_label: "At least:", min_title: "Only show trips at least this long",
+    min_any: "any length", min_3: "3+ nights", min_4: "4+ nights", min_5: "5+ nights", min_7: "a week+",
+    min_10: "10+ nights", min_14: "2 weeks+", min_21: "3 weeks+",
+    f_flight_budget: "Flight budget (out + back)", no_limit: "No limit",
+    show_above: "Show options above budget", f_hotel_budget: "Hotel budget / night",
+    f_total_budget: "Total trip budget", f_currency: "Currency", f_freshness: "Price freshness",
+    fresh_0: "Today only", fresh_1: "Up to 1 day", fresh_2: "Up to 2 days", fresh_3: "Up to 3 days",
+    fresh_7: "Up to 7 days", fresh_any: "Any",
+    more: "Hotel, stops and other conditions", f_rating: "Hotel rating", any_m: "Any",
+    rating_3: "3+ of 5", rating_4: "4+ of 5", rating_45: "4.5+ of 5",
+    f_distance: "Distance from centre", any_n: "Any", dist_1: "≤ 1 km", dist_3: "≤ 3 km", dist_5: "≤ 5 km", dist_10: "≤ 10 km",
+    f_room: "Room / breakfast", private_room: "Private room", breakfast: "Breakfast",
+    f_stops: "Stops", direct_only: "Direct only",
+    f_domestic: "Domestic", dom_auto: "Auto", dom_abroad: "Abroad only", dom_incl: "Including domestic",
+    f_weather: "Weather", warm_only: "Warm places only",
+    go_trip: "FIND CHEAPEST TRIP", go_dest: "FIND CHEAPEST DESTINATIONS",
+    deep_search: "Deep search",
+    st_UNDERSTAND: "Conditions", st_UNDERSTAND_d: "Understand the conditions and hard limits",
+    st_DISCOVERY: "Destinations", st_DISCOVERY_d: "Find candidate destinations and dates",
+    st_CANDIDATES: "Shortlist", st_CANDIDATES_d: "Pick the most promising destinations",
+    st_ROUTES: "Routes", st_ROUTES_d: "Real outbound and return routes, every connection option",
+    st_COMBINE: "Combinations", st_COMBINE_d: "Combine out + back, check connections",
+    st_HOTELS: "Hotels", st_HOTELS_d: "Find hotels",
+    st_TOTAL: "Total", st_TOTAL_d: "Calculate the full cost",
+    st_REVALIDATE: "Re-check", st_REVALIDATE_d: "Re-check prices of the best options",
+    st_RANK: "Ranking", st_RANK_d: "Sort by total trip cost",
+    connected: "{name}: connected", error_n: "Error {n}", check_fields: "Check the form fields: ",
+    kind_region: "region", kind_state: "state/province", kind_country: "country", kind_city: "city", kind_airport: "airport",
+    hours_min: "{h} h {m} min",
+    age_unknown: "price age unknown", age_today: "price seen today", age_yesterday: "price seen yesterday",
+    age_days: "price seen {n} days ago", age_title: "When Aviasales users last saw this price ({date})",
+    direct: "DIRECT",
+    self_transfer: "⚠️ SELF-TRANSFER / SEPARATE TICKETS", airport_change: "Airport change during the connection",
+    segments_unknown: "Connection cities, airport changes and self-transfers aren't reported by the provider — see the ticket page.",
+    dep: "departs", arr: "arrives", on_way: "travel time", sold_by: "sold by: {seller}",
+    live_pending: "⏳ waiting for the first monitoring check",
+    hotel_h: "🏨 HOTEL · {nights}", reviews: "★ {r}/5 TripAdvisor ({n} reviews)", no_reviews: "no reviews",
+    km_centre: "{n} km from the centre", rating_only: "★ {r}/5 TripAdvisor", no_limit_short: "no limit", per_night: "{money}/night", total_word: "{money} total",
+    cheapest_at: "cheapest at: <b>{site}</b>", optional: " (optional)", checked_at: "checked {when}",
+    hotel_not_checked: "Hotel not checked", hotel_no_data: "No hotel data", hotel_not_connected: "Hotel provider not connected",
+    above_budget: "Above your budget", rechecked: "✓ re-checked: {note}", from_city: "from {city}",
+    leg_out: "✈️ FLIGHT — OUTBOUND", leg_ret: "✈️ FLIGHT — RETURN", total_h: "💰 TOTAL TRIP COST",
+    flights_row: "Flights (out + back)", hotel_row: "Hotel", hotel_row_n: "Hotel ({nights})",
+    hotel_excluded_nc: "not included — not checked", hotel_excluded_nd: "not included — no data",
+    mandatory_fees: "Mandatory fees", optional_fees: "Optional payments (not in the total)",
+    total_row: "Estimated total", flights_only: "(flights only)",
+    prices_checked: "Prices checked: {when} · {provider} · outbound and return are two separate tickets",
+    btn_out: "VIEW FLIGHT →", btn_ret: "VIEW RETURN FLIGHT ←", btn_hotel: "VIEW HOTEL (TripAdvisor)", btn_hotel_off: "HOTEL — no data",
+    pin_on: "📌 Always watched", pin_off: "📌 Watch always",
+    tg_connect: "🔔 Telegram alerts", tg_waiting: "Open Telegram and press “Start” — waiting for confirmation…",
+    tg_on_pinned: "🔔 Price changes will come to Telegram", tg_on_unpinned: "🔔 Telegram is linked — press “Watch” to get alerts",
+    tg_line_on: "🔔 Telegram linked: I'll message you when a 📌 ticket changes price or disappears.",
+    tg_line_off: "🔔 Price changes of watched tickets can come to Telegram.",
+    tg_unlink: "turn off", tg_link_btn: "connect",
+    other_hotel: " + hotel {money}/night", other_flight: "flights {money}", other_from: "from {city}",
+    stops_pair: "stops {a}/{b}", with_hotel: "with hotel", without_hotel: "no hotel",
+    col_dest: "Destination", col_dates: "Dates", col_out: "Out", col_ret: "Back", col_hotel: "Hotel/night",
+    col_nights: "Nights", col_total: "Total",
+    info_summary: "How we searched: sources, limits, statistics",
+    i_from: "From", i_to: "To", i_exceptFrom: "Except (from)", i_exceptTo: "Except (to)", i_when: "When",
+    i_tripLength: "Trip length", i_flightBudget: "Flight budget", i_hotelBudget: "Hotel budget",
+    i_totalBudget: "Trip budget", i_showAboveBudget: "Show above budget", i_stops: "Stops",
+    i_domestic: "Domestic", i_weather: "Weather", i_priceFreshness: "Price freshness", i_currency: "Currency",
+    i_origin_cities: "Departure cities", i_of: "{a} of {b}", i_months: "Months", i_found: "Destinations found",
+    i_found_v: "{n}, analysed in depth: {k}", i_combos: "Out + back combinations", i_api: "API requests",
+    i_api_v: "{net} network · {cache} cached · 429: {rl} · {sec} s", i_fx: "Exchange rates",
+    i_fx_v: "1 {base} = {rate} {quote} · {src} · rate for {date}, fetched {when}", i_fx_none: "No conversion needed",
+    limits_h: "Search limits",
+    cheapest_trip: "✈️ + 🏨 CHEAPEST TRIP", other_dates: "Other dates: {city}",
+    other_dest: "Other cheap destinations",
+    mixed_note: "Trips with a checked hotel price come first; below — where no hotel price exists (flights-only total).",
+    dest_h: "Where can I travel cheapest?", compare_h: "Trip comparison", option_k: "{flag} OPTION",
+    ago_never: "not checked yet", ago_s: "{n} s ago", ago_m: "{n} min ago", ago_h: "{n} h ago",
+    alt_now: " · cheapest on this day now: {link}", gone: "🔴 ticket gone from Aviasales data{at}",
+    gone_at: " at {t}", checked_ago: "checked {ago}",
+    price_changed: "price changed: {old} → <b>{new}</b>", price_same: "price unchanged", on_sale: "on sale",
+    total_gone: "⚠ one of the tickets is gone from Aviasales data — this total is no longer valid",
+    total_updated: "updated by monitoring: {d} vs. the search price", verified_ago: "verified with Aviasales {ago}", verified: "verified {ago}",
+    paused: "⏸ Price monitoring paused: {why}", paused_no_token: "no TRAVELPAYOUTS_TOKEN",
+    paused_searching: "a search is running — monitoring waits to stay within the API limit",
+    paused_quota: "saving the Aviasales limit for searches ({left} requests left this minute)",
+    watch_idle: "🔄 Price monitoring runs every {s} s — it will watch your tickets after a search",
+    watch_rot: " ({total} on the site; {req} of {groups} flight-days per cycle, in rotation)",
+    watch_last: "last cycle {ago}: {req} requests in {sec} s", watch_changes: ", changes: {n}", watch_errors: ", errors: {n}",
+    watch_first: "first cycle not done yet",
+    watch_bar: "<b>Price monitoring</b>: every {s} s · your tickets: {n}{rot} · {last}",
+    k_gone: "gone", k_back: "back: {price}", cheapest_now: "cheapest on this date now: {price}",
+    err_empty_answer: "the provider returned an empty answer for this flight-day",
+    w_route: "Flight", w_dep: "Departs", w_flight: "Flight no.", w_stops: "Stops", w_first: "At search", w_now: "Now",
+    w_status: "Status", w_seen: "Price seen", w_checked: "Checked", w_changes: "Changes", w_open: "open",
+    s_gone: "🔴 gone", s_sale: "🟢 on sale",
+    watch_title: "📡 Watched tickets",
+    watch_desc: "Every ticket is re-checked with Aviasales bypassing the cache. “On sale” means the ticket is in Aviasales' data; the live price and seats are confirmed on the booking page.",
+    hero_title: "Find the cheapest whole trip",
+    hero_sub: "Flights out and back + hotel + mandatory fees. You set the conditions — the algorithm picks where and when to go.",
+    ex_label: "For example:", ex1: "From Moscow to anywhere for a weekend", ex2: "Somewhere warm in January for a week, up to 80000 rub with hotel",
+    ex3: "From Saint Petersburg to Asia for at least 2 weeks, hotel up to $40", ex4: "From Moscow to Istanbul or Tbilisi for 3-5 nights",
+    for_trip: "for the whole trip, {nights}",
+  },
+};
+let lang = "ru";
+try { lang = localStorage.getItem("cheaptrip.lang") === "en" ? "en" : "ru"; } catch (e) { /* private mode */ }
+const t = (key, p = {}) => String(I18N[lang][key] ?? I18N.ru[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => p[k] ?? "");
+const locale = () => (lang === "en" ? "en-GB" : "ru-RU");
+function plRu(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (b === 1 && a !== 11) return one;
+  if (b >= 2 && b <= 4 && (a < 12 || a > 14)) return few;
+  return many;
+}
+const nightsText = n => lang === "en" ? `${n} night${n === 1 ? "" : "s"}` : `${n} ${plRu(n, "ночь", "ночи", "ночей")}`;
+const stopsWord = n => lang === "en" ? `${n} STOP${n === 1 ? "" : "S"}` : `${n} ${plRu(n, "ПЕРЕСАДКА", "ПЕРЕСАДКИ", "ПЕРЕСАДОК")}`;
+
+function applyStatic() {
+  document.documentElement.lang = lang;
+  document.title = t("page_title");
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll("#length option[data-nights]").forEach(o => { o.textContent = nightsText(+o.dataset.nights); });
+  $("#langBtn").textContent = t("lang_btn");
+  $("#langBtn").title = t("lang_btn_title");
+  $("#go").textContent = mode === "trip" ? t("go_trip") : t("go_dest");
+  $("#when option[value='anytime']").textContent = t("anytime", { n: searchMonths });
+  renderExamples();
+  applyLengthLimits();
+}
+$("#langBtn").addEventListener("click", () => {
+  const other = lang === "en" ? "ru" : "en";
+  // Swap the default From/To only if they still hold the other language's defaults.
+  if ($("#origin").value === t("default_origin")) $("#origin").value = I18N[other].default_origin;
+  if ($("#destination").value === t("default_dest")) $("#destination").value = I18N[other].default_dest;
+  lang = other;
+  try { localStorage.setItem("cheaptrip.lang", lang); } catch (e) { /* private mode */ }
+  applyStatic();
+  loadStatus();
+  if (report) renderReport(report);
+  renderLive();
+  refreshTg();  // the bot writes in the site's language
+});
+
+const STAGES = ["UNDERSTAND", "DISCOVERY", "CANDIDATES", "ROUTES", "COMBINE", "HOTELS", "TOTAL", "REVALIDATE", "RANK"];
+let mode = "trip", report = null, sort = { key: "tripTotal", dir: 1 }, polling = null, searchMonths = 3;
+
+// ── formatting ──────────────────────────────────────────────────────────────
+const SYM = { RUB: "₽", USD: "$", EUR: "€" };
+function money(v, cur) {
+  if (v == null) return "—";
+  const n = Math.round(v).toLocaleString(locale()).replace(/ /g, " ");
+  return SYM[cur] ? `${SYM[cur]}${n}` : `${n} ${cur}`;
+}
+const dshort = iso => new Date(iso + "T12:00:00").toLocaleDateString(locale(), { day: "numeric", month: "short" });
+const dlong = iso => new Date(iso + "T12:00:00").toLocaleDateString(locale(), { day: "numeric", month: "short", year: "numeric" });
+const localTime = iso => iso ? iso.slice(11, 16) : "—";      // airport-local time as sent by the provider
+const localDate = iso => iso ? dlong(iso.slice(0, 10)) : "—";
+function checked(iso) {
+  const d = new Date(iso);
+  const off = -d.getTimezoneOffset() / 60;
+  return d.toLocaleString(locale(), { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    + ` (UTC${off >= 0 ? "+" : ""}${off})`;
+}
+const dur = m => m ? t("hours_min", { h: Math.floor(m / 60), m: m % 60 }) : "—";
+function priceAgeDays(seen) {
+  if (!seen) return null;
+  const today = new Date(); today.setHours(12, 0, 0, 0);
+  return Math.round((today - new Date(seen + "T12:00:00")) / 86400000);
+}
+function ageBadge(seen) {
+  const d = priceAgeDays(seen);
+  if (d == null) return `<span class="tag info">${t("age_unknown")}</span>`;
+  const text = d <= 0 ? t("age_today") : d === 1 ? t("age_yesterday") : t("age_days", { n: d });
+  const cls = d <= 1 ? "ok" : d <= 3 ? "warnage" : "above";
+  return `<span class="tag ${cls}" title="${esc(t("age_title", { date: dlong(seen) }))}">🕒 ${text}</span>`;
+}
+function stopsBadge(n) {
+  const cls = n === 0 ? "s0" : n === 1 ? "s1" : n === 2 ? "s2" : "s3";
+  return `<span class="stops ${cls}">${n === 0 ? t("direct") : stopsWord(n)}</span>`;
+}
+
+// ── status ──────────────────────────────────────────────────────────────────
+async function loadStatus() {
+  const st = await (await fetch("/api/status?lang=" + lang)).json();
+  $("#providerPills").innerHTML = st.providers.map(p =>
+    `<span class="pill ${p.available ? "" : "off"}" title="${esc(p.available ? t("connected", { name: p.name }) : p.message)}">
+      <span class="dotc"></span>${p.kind === "flights" ? "✈" : "🏨"} ${esc(p.name)}</span>`).join("");
+  $("#providerBanners").innerHTML = st.providers.filter(p => !p.available).map(p =>
+    `<div class="banner ${p.kind === "flights" ? "bad" : "warn"}">${p.kind === "flights" ? "✈️" : "🏨"} ${esc(p.message)}</div>`).join("");
+  if (!currencyTouched) $("#currency").value = st.defaults.currency;
+  searchMonths = st.defaults.search_months;
+  $("#when option[value='anytime']").textContent = t("anytime", { n: searchMonths });
+  [nightsLo, nightsHi] = st.defaults.flexible_nights;
+  applyLengthLimits();
+}
+
+// Example queries under the search bar: one click fills the form and searches.
+function renderExamples() {
+  $("#examples").innerHTML = `<span class="ex-label">${t("ex_label")}</span>` +
+    ["ex1", "ex2", "ex3", "ex4"].map(k => `<button type="button" class="example">${esc(t(k))}</button>`).join("");
+  document.querySelectorAll(".example").forEach(b => b.addEventListener("click", async () => {
+    $("#nlText").value = b.textContent;
+    if (await parseNL()) startSearch();
+  }));
+}
+let currencyTouched = false;
+$("#currency").addEventListener("change", () => { currencyTouched = true; });
+
+// Trip length limits: the server's 2–30 range, raised by the "at least" (minimum trip length) choice.
+let nightsLo = 2, nightsHi = 30;
+const minNights = () => Number($("#minNights").value) || 0;
+try { $("#minNights").value = localStorage.getItem("cheaptrip.minNights") || ""; } catch (e) { /* private mode */ }
+function applyLengthLimits() {
+  const lo = Math.max(nightsLo, minNights());
+  $('#length option[value="flex"]').textContent = t("flexible", { lo, hi: nightsHi });
+  $("#lengthHint").textContent = t("length_hint", { lo, hi: nightsHi });
+  ["#nMin", "#nMax"].forEach(id => { $(id).min = lo; $(id).max = nightsHi; });
+  document.querySelectorAll("#length option").forEach(o => {
+    if (/^\d+$/.test(o.value)) o.hidden = o.disabled = +o.value < lo || +o.value > nightsHi;
+  });
+  const sel = $("#length");
+  if (/^\d+$/.test(sel.value) && +sel.value < lo) {  // e.g. "2 nights" chosen, then the filter turned on
+    sel.value = "range"; $("#nMin").value = lo; $("#nMax").value = Math.max(lo, +$("#nMax").value || lo);
+  }
+  if ($("#nMin").value && +$("#nMin").value < lo) $("#nMin").value = lo;
+  if (+$("#nMax").value < +$("#nMin").value) $("#nMax").value = $("#nMin").value;
+  $("#lengthRange").classList.toggle("hidden", sel.value !== "range");
+}
+$("#minNights").addEventListener("change", () => {
+  try { localStorage.setItem("cheaptrip.minNights", $("#minNights").value); } catch (e) { /* private mode */ }
+  applyLengthLimits();
+});
+
+// ── form ────────────────────────────────────────────────────────────────────
+function syncForm() {
+  $("#whenMonth").classList.toggle("hidden", $("#when").value !== "month");
+  $("#whenDates").classList.toggle("hidden", $("#when").value !== "dates");
+  $("#lengthRange").classList.toggle("hidden", $("#length").value !== "range");
+  $("#flightBudget").disabled = $("#flightNoLimit").checked;
+  $("#hotelBudget").disabled = $("#hotelNoLimit").checked;
+  $("#hotelCur").disabled = $("#hotelNoLimit").checked;
+  applyLengthLimits();
+}
+["when", "length", "flightNoLimit", "hotelNoLimit", "nMin", "nMax"].forEach(id => $("#" + id).addEventListener("change", syncForm));
+
+const numOrNull = el => el.value === "" || el.disabled ? null : Number(el.value);
+function collectQuery() {
+  const list = el => el.value.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+  const q = {
+    origin: $("#origin").value.trim() || t("default_origin"),
+    destination: $("#destination").value.trim() || t("default_dest"),
+    exclude_origins: list($("#excludeOrigin")),
+    exclude_destinations: list($("#excludeDest")),
+    currency: $("#currency").value,
+    flight_budget: $("#flightNoLimit").checked ? null : numOrNull($("#flightBudget")),
+    show_above_budget: $("#showAbove").checked,
+    hotel_budget_per_night: $("#hotelNoLimit").checked ? null : numOrNull($("#hotelBudget")),
+    hotel_budget_currency: $("#hotelCur").value,
+    total_budget: numOrNull($("#totalBudget")),
+    min_hotel_rating: $("#rating").value ? Number($("#rating").value) : null,
+    max_distance_km: $("#distance").value ? Number($("#distance").value) : null,
+    private_room: $("#privateRoom").checked || null,
+    breakfast: $("#breakfast").checked || null,
+    max_stops: $("#maxStops").value === "" ? null : Number($("#maxStops").value),
+    include_domestic: $("#domestic").value === "" ? null : $("#domestic").value === "true",
+    weather: $("#warm").checked ? "warm" : null,
+    max_price_age_days: Number($("#freshness").value),
+    mode,
+    lang,
+  };
+  const w = $("#when").value;
+  if (/^\d+$/.test(w)) q.search_months = Number(w);
+  if (w === "month" && $("#whenMonth").value) {
+    const [y, m] = $("#whenMonth").value.split("-").map(Number);
+    q.date_from = `${$("#whenMonth").value}-01`;
+    q.date_to = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+  }
+  if (w === "dates") { q.date_from = $("#dateFrom").value || null; q.date_to = $("#dateTo").value || null; }
+  const l = $("#length").value;
+  if (l === "range") { q.nights_min = Number($("#nMin").value); q.nights_max = Number($("#nMax").value); }
+  else if (l !== "flex") { q.nights_min = q.nights_max = Number(l); }
+  const floor = minNights();
+  if (floor) {  // "at least": never shorter than chosen, whatever else is selected
+    q.nights_min = Math.max(q.nights_min ?? floor, floor);
+    q.nights_max = Math.max(q.nights_max ?? nightsHi, q.nights_min);
+  }
+  return q;
+}
+
+function fillForm(q) {
+  $("#origin").value = q.origin; $("#destination").value = q.destination;
+  $("#excludeOrigin").value = (q.exclude_origins || []).join(", ");
+  $("#excludeDest").value = (q.exclude_destinations || []).join(", ");
+  $("#currency").value = q.currency || "RUB";
+  $("#flightNoLimit").checked = q.flight_budget == null; $("#flightBudget").value = q.flight_budget ?? "";
+  $("#showAbove").checked = !!q.show_above_budget;
+  $("#hotelNoLimit").checked = q.hotel_budget_per_night == null;
+  $("#hotelBudget").value = q.hotel_budget_per_night ?? ""; $("#hotelCur").value = q.hotel_budget_currency || "USD";
+  $("#totalBudget").value = q.total_budget ?? "";
+  $("#rating").value = q.min_hotel_rating ? String(Math.floor(q.min_hotel_rating)) : "";
+  $("#distance").value = q.max_distance_km ? String(q.max_distance_km) : "";
+  $("#privateRoom").checked = !!q.private_room; $("#breakfast").checked = !!q.breakfast;
+  $("#maxStops").value = q.max_stops == null ? "" : String(Math.min(q.max_stops, 3));
+  $("#domestic").value = q.include_domestic == null ? "" : String(q.include_domestic);
+  $("#warm").checked = q.weather === "warm";
+  if (q.date_from) {
+    const monthStart = q.date_from.endsWith("-01"), mEnd = q.date_to && new Date(q.date_to + "T12:00:00");
+    const lastDay = mEnd && new Date(mEnd.getFullYear(), mEnd.getMonth() + 1, 0).getDate() === mEnd.getDate();
+    if (monthStart && lastDay && q.date_from.slice(0, 7) === q.date_to.slice(0, 7)) {
+      $("#when").value = "month"; $("#whenMonth").value = q.date_from.slice(0, 7);
+    } else { $("#when").value = "dates"; $("#dateFrom").value = q.date_from; $("#dateTo").value = q.date_to || q.date_from; }
+  } else if (q.search_months) {
+    const w = $("#when");
+    if (![...w.options].some(o => o.value === String(q.search_months)))
+      w.add(new Option(t("next_n", { n: q.search_months }), String(q.search_months)), w.options[5]);
+    w.value = String(q.search_months);
+  } else $("#when").value = "anytime";
+  if (q.nights_min == null) $("#length").value = "flex";
+  else { $("#length").value = "range"; $("#nMin").value = q.nights_min; $("#nMax").value = q.nights_max; }
+  syncForm();
+}
+
+// ── place suggestions ───────────────────────────────────────────────────────
+// Suggestions complete the LAST item of a comma-separated list: "Москва, Каз" → "Москва, Казань".
+let sugTimer;
+["origin", "destination", "excludeOrigin", "excludeDest"].forEach(id => $("#" + id).addEventListener("input", e => {
+  clearTimeout(sugTimer);
+  sugTimer = setTimeout(async () => {
+    const parts = e.target.value.split(",");
+    const last = parts.pop().trim();
+    const head = parts.map(s => s.trim()).filter(Boolean);
+    const items = last ? await (await fetch(`/api/places?lang=${lang}&q=` + encodeURIComponent(last))).json() : [];
+    $("#placesList").innerHTML = items.map(i => {
+      const value = [...head, i.kind === "airport" ? i.code : i.label].join(", ");
+      return `<option value="${esc(value)}">${esc(i.label)} · ${esc(t("kind_" + i.kind))}</option>`;
+    }).join("");
+  }, 180);
+}));
+
+// ── natural language ────────────────────────────────────────────────────────
+async function parseNL() {
+  const text = $("#nlText").value.trim();
+  if (!text) return false;
+  const r = await (await fetch("/api/parse", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, lang }) })).json();
+  fillForm(r.query);
+  $("#nlNotes").innerHTML = r.notes.map(n => `<span class="chip">${esc(n)}</span>`).join("");
+  return true;
+}
+$("#nlParse").addEventListener("click", parseNL);
+$("#nlGo").addEventListener("click", async () => { if (await parseNL()) startSearch(); });
+$("#nlText").addEventListener("keydown", async e => { if (e.key === "Enter" && await parseNL()) startSearch(); });
+
+// ── tabs ────────────────────────────────────────────────────────────────────
+document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === tab));
+  mode = tab.dataset.tab;
+  $("#go").textContent = mode === "trip" ? t("go_trip") : t("go_dest");
+  if (report) renderReport(report);
+}));
+
+// ── search ──────────────────────────────────────────────────────────────────
+$("#form").addEventListener("submit", e => { e.preventDefault(); startSearch(); });
+
+async function startSearch() {
+  clearInterval(polling);
+  $("#error").classList.add("hidden");
+  $("#results").innerHTML = "";
+  $("#go").disabled = true; $("#nlGo").disabled = true;
+  $("#progress").classList.remove("hidden");
+  $("#stages").innerHTML = STAGES.map(k =>
+    `<li class="stage" data-k="${k}"><span class="dot"></span><span class="name">${esc(t("st_" + k))}</span>
+     <span class="muted small">${esc(t("st_" + k + "_d"))}</span><span class="msg"></span></li>`).join("");
+  $("#barFill").style.width = "2%";
+  const res = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(collectQuery()) });
+  if (!res.ok) {
+    let msg = t("error_n", { n: res.status });
+    try { msg = (await res.json()).detail || msg; } catch (e) { /* not JSON */ }
+    $("#go").disabled = false; $("#nlGo").disabled = false;
+    showError(typeof msg === "string" ? msg : t("check_fields") + JSON.stringify(msg));
+    return;
+  }
+  const { job_id } = await res.json();
+  let since = 0;
+  polling = setInterval(async () => {
+    const r = await (await fetch(`/api/search/${job_id}?since=${since}`)).json();
+    since = r.next;
+    r.events.forEach(onEvent);
+    if (r.status === "done") { finish(); report = r.report; renderReport(report); }
+    if (r.status === "error") { finish(); showError(r.error); }
+  }, 700);
+}
+function onEvent(ev) {
+  const idx = STAGES.indexOf(ev.stage);
+  document.querySelectorAll(".stage").forEach((el, i) => {
+    el.classList.toggle("done", i < idx); el.classList.toggle("active", i === idx);
+  });
+  const el = document.querySelector(`.stage[data-k="${ev.stage}"] .msg`);
+  if (el) el.textContent = ev.message;
+  const within = ev.total ? ev.done / ev.total : 0.5;
+  $("#barFill").style.width = `${Math.min(100, ((idx + within) / STAGES.length) * 100)}%`;
+}
+function finish() {
+  clearInterval(polling);
+  $("#go").disabled = false; $("#nlGo").disabled = false;
+  document.querySelectorAll(".stage").forEach(el => { el.classList.remove("active"); el.classList.add("done"); });
+  $("#barFill").style.width = "100%";
+}
+function showError(msg) {
+  const e = $("#error"); e.textContent = msg; e.classList.remove("hidden");
+  $("#progress").classList.add("hidden");
+}
+
+// ── rendering ───────────────────────────────────────────────────────────────
+function flightRow(label, f, fromName, toName) {
+  const self = f.is_self_transfer === true ? `<div class="banner warn small">${t("self_transfer")}</div>` : "";
+  const change = f.airport_change === true ? `<div class="banner warn small">${t("airport_change")}</div>` : "";
+  const segs = f.segments_available && f.segments.length
+    ? `<div class="small">${f.segments.map(s => `${esc(s.origin_airport)} → ${esc(s.destination_airport)} ${localTime(s.departure_at)}`).join("<br>")}</div>`
+    : (f.stops > 0 ? `<div class="small muted">${t("segments_unknown")}</div>` : "");
+  const depDate = f.departure_at.slice(0, 10), arrDate = f.arrival_at ? f.arrival_at.slice(0, 10) : null;
+  const dots = Array.from({ length: f.stops }, (_, i) =>
+    `<span class="stopdot" style="left:${((i + 1) / (f.stops + 1)) * 100}%"></span>`).join("");
+  return `<div class="flight">
+    <div class="fl-leg">${label}</div>
+    <div class="fl-side"><div class="fl-time">${localTime(f.departure_at)}</div>
+      <div class="fl-city" title="${esc(fromName)}">${esc(fromName)} · ${esc(f.origin_airport)}</div>
+      <div class="fl-city">${dshort(depDate)}</div></div>
+    <div class="fl-mid"><div>${t("on_way")} ${dur(f.duration_minutes)}</div>
+      <div class="fl-line">${dots}<span class="plane">✈</span></div>${stopsBadge(f.stops)}</div>
+    <div class="fl-side right"><div class="fl-time">${f.arrival_at ? localTime(f.arrival_at) : "—"}</div>
+      <div class="fl-city" title="${esc(toName)}">${esc(toName)} · ${esc(f.destination_airport)}</div>
+      <div class="fl-city">${arrDate ? dshort(arrDate) : ""}</div></div>
+    <div class="fl-price">${money(f.price, f.currency)}${f.airline ? `<div class="air">${esc(f.airline)} ${esc(f.flight_number || "")}</div>` : ""}</div>
+    <div class="fl-meta">${ageBadge(f.price_seen_on)}${f.seller ? `<span class="muted">${esc(t("sold_by", { seller: f.seller }))}</span>` : ""}</div>
+    <div class="fl-wide"><div class="live pending" data-key="${esc(f.watch_key)}">${t("live_pending")}</div></div>
+    ${self || change || segs ? `<div class="fl-wide">${self}${change}${segs}</div>` : ""}
+  </div>`;
+}
+
+const HOTEL_MSG_PREFIX = /^(Нет данных об отелях|No hotel data|Источник отелей не подключён|Hotel provider not connected):\s*/;
+function hotelRow(r) {
+  const h = r.hotel;
+  if (!h) {
+    const title = { not_checked: t("hotel_not_checked"), unavailable: t("hotel_no_data"),
+                    error: t("hotel_no_data") }[r.hotel_status] || t("hotel_not_connected");
+    const msg = (r.hotel_message || "").replace(HOTEL_MSG_PREFIX, "").trim();
+    return `<div class="hotel-row"><div class="hotel-ico">🏨</div>
+      <div><div class="fl-leg">${t("hotel_h", { nights: nightsText(r.nights) })}</div><div class="hotel-name">${title}</div>
+        ${msg && msg !== title ? `<div class="small muted">${esc(msg)}</div>` : ""}</div><div></div></div>`;
+  }
+  const rating = h.rating != null
+    ? esc(h.reviews ? t("reviews", { r: h.rating, n: h.reviews }) : t("rating_only", { r: h.rating })) : t("no_reviews");
+  return `<div class="hotel-row"><div class="hotel-ico">🏨</div>
+    <div><div class="fl-leg">${t("hotel_h", { nights: nightsText(r.nights) })} · ${dshort(r.departureDate)} → ${dshort(r.returnDate)}</div>
+      <div class="hotel-name">${esc(h.name)}</div>
+      <div class="small muted">${esc(h.accommodation_type || "")} · ${rating}${h.distance_from_center_km != null ? ` · ${t("km_centre", { n: h.distance_from_center_km })}` : ""}</div>
+      ${h.sold_by ? `<div class="small">${t("cheapest_at", { site: esc(h.sold_by) })}${h.site_prices.length > 1
+        ? ` · ${h.site_prices.map(s => `${esc(s.site)} ${money(s.rate, h.currency)}`).join(" · ")}` : ""}</div>` : ""}
+      ${h.fees.length ? `<div class="small">${h.fees.map(f => `${esc(f.name)}: ${money(f.amount, f.currency)}${f.mandatory ? "" : t("optional")}`).join("<br>")}</div>` : ""}
+      <div class="small muted">${esc(h.provider)} · ${t("checked_at", { when: checked(h.checked_at) })}</div></div>
+    <div class="fl-price">${t("per_night", { money: money(h.price_per_night, h.currency) })}
+      <div class="air">${t("total_word", { money: money(h.total_price, h.currency) })}</div></div></div>`;
+}
+
+function tripCard(r, kicker, best = false) {
+  const cur = r.currency, h = r.hotel;
+  const warns = [...r.budget_notes, ...r.warnings];
+  return `<div class="ticket">
+    <div class="ticket-main">
+      <div class="ticket-head"><span class="badge ${best ? "best" : "alt"}">${kicker}</span>
+        ${r.above_budget ? `<span class="tag above">${t("above_budget")}</span>` : ""}
+        ${r.revalidated ? `<span class="tag ok">${esc(t("rechecked", { note: r.revalidation_note }))}</span>`
+          : r.revalidation_note ? `<span class="tag info">${esc(r.revalidation_note)}</span>` : ""}</div>
+      <div class="dest-title">${r.flag} ${esc(r.destination)} <span class="country">${esc(r.country)}</span></div>
+      <div class="dates-line">${dlong(r.departureDate)} – ${dlong(r.returnDate)} · ${nightsText(r.nights)} · ${esc(t("from_city", { city: r.origin }))}
+        ${r.climate_note ? ` · 🌡 ${esc(r.climate_note)}` : ""}</div>
+      ${flightRow(t("leg_out"), r.outbound, r.origin, r.destination)}
+      ${flightRow(t("leg_ret"), r.return, r.destination, r.origin)}
+      ${hotelRow(r)}
+      ${warns.length ? `<ul class="warns">${warns.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+    </div>
+    <div class="ticket-side">
+      <div>
+        <div class="kicker">${t("total_h")}</div>
+        <div class="price-big" data-live-total data-out="${esc(r.outbound.watch_key)}" data-ret="${esc(r.return.watch_key)}"
+          data-base="${r.tripTotal}" data-outp="${r.outbound.price}" data-retp="${r.return.price}"
+          data-ratio="${r.flightTotal / (r.outbound.price + r.return.price)}" data-cur="${cur}">${money(r.tripTotal, cur)}</div>
+        <div class="small muted">${r.total_includes_hotel ? t("for_trip", { nights: nightsText(r.nights) }) : t("flights_only")}</div>
+        <div class="small live-note"></div>
+      </div>
+      <div class="side-lines">
+        <span>${t("flights_row")}</span><span class="v">${money(r.flightTotal, cur)}</span>
+        <span>${h ? t("hotel_row_n", { nights: nightsText(r.nights) }) : t("hotel_row")}</span>
+        <span class="v">${r.hotelTotal != null ? money(r.hotelTotal, cur) : r.hotel_status === "not_checked" ? t("hotel_excluded_nc") : t("hotel_excluded_nd")}</span>
+        ${r.mandatoryFees ? `<span>${t("mandatory_fees")}</span><span class="v">${money(r.mandatoryFees, cur)}</span>` : ""}
+        ${r.optionalFees ? `<span class="muted">${t("optional_fees")}</span><span class="v muted">${money(r.optionalFees, cur)}</span>` : ""}
+      </div>
+      <div class="side-btns">
+        <a class="btn" href="${esc(r.flightUrl)}" target="_blank" rel="noopener">${t("btn_out")}</a>
+        <a class="btn" href="${esc(r.returnFlightUrl)}" target="_blank" rel="noopener">${t("btn_ret")}</a>
+        ${r.hotelUrl ? `<a class="btn secondary" href="${esc(r.hotelUrl)}" target="_blank" rel="noopener">${t("btn_hotel")}</a>` : `<span class="btn off">${t("btn_hotel_off")}</span>`}
+        <button class="ghost pin" type="button" data-keys="${esc(r.outbound.watch_key)}\n${esc(r.return.watch_key)}">${t("pin_off")}</button>
+        <div class="tg-slot" data-keys="${esc(r.outbound.watch_key)}\n${esc(r.return.watch_key)}"></div>
+      </div>
+      <div class="small muted">${esc(t("prices_checked", { when: checked(r.checkedAt), provider: r.provider }))}</div>
+    </div>
+  </div>`;
+}
+
+function otherRow(r, i) {
+  const seen = [r.outbound.price_seen_on, r.return.price_seen_on].filter(Boolean).sort()[0];
+  return `<div class="tile other" data-i="${i}">
+    ${r.above_budget ? `<span class="tag above tile-tag">${t("above_budget")}</span>` : ""}
+    <div class="tile-flag">${r.flag}</div>
+    <div class="tile-city">${esc(r.destination)}</div>
+    <div class="tile-country">${esc(r.country)}</div>
+    <div class="tile-dates">${dshort(r.departureDate)} – ${dshort(r.returnDate)} · ${nightsText(r.nights)}</div>
+    <div class="tile-meta">${esc(t("other_from", { city: r.origin }))} · ${t("stops_pair", { a: r.outbound.stops, b: r.return.stops })}</div>
+    <div class="tile-meta">${t("other_flight", { money: money(r.flightTotal, r.currency) })}${r.hotel ? t("other_hotel", { money: money(r.hotel.price_per_night, r.hotel.currency) }) : ""}</div>
+    <div class="tile-price">${money(r.tripTotal, r.currency)}<small>${r.total_includes_hotel ? t("with_hotel") : t("without_hotel")}</small></div>
+    <div class="tile-meta">${ageBadge(seen)}</div>
+  </div>`;
+}
+
+const COLS = [
+  ["destination", "col_dest"], ["departureDate", "col_dates"], ["out", "col_out", 1], ["ret", "col_ret", 1],
+  ["hotelNight", "col_hotel", 1], ["nights", "col_nights", 1], ["tripTotal", "col_total", 1],
+];
+const colVal = (r, k) => ({ out: r.outbound.price, ret: r.return.price,
+  hotelNight: r.hotel ? r.hotel.price_per_night : null }[k] ?? r[k]);
+function table(rows) {
+  const sorted = [...rows].sort((a, b) => {
+    const x = colVal(a, sort.key), y = colVal(b, sort.key);
+    if (x == null) return 1; if (y == null) return -1;
+    return (x > y ? 1 : x < y ? -1 : 0) * sort.dir;
+  });
+  return `<div class="tablewrap"><table><thead><tr>${COLS.map(([k, label, n]) =>
+    `<th data-k="${k}" class="${n ? "num" : ""}">${t(label)}${sort.key === k ? (sort.dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("")}</tr></thead>
+    <tbody>${sorted.map(r => `<tr>
+      <td>${r.flag} ${esc(r.destination)} <span class="muted small">${esc(t("other_from", { city: r.origin }))}</span></td>
+      <td>${dshort(r.departureDate)}–${dshort(r.returnDate)}</td>
+      <td class="num">${money(r.outbound.price, r.outbound.currency)} <span class="muted small">${r.outbound.stops}×</span></td>
+      <td class="num">${money(r.return.price, r.return.currency)} <span class="muted small">${r.return.stops}×</span></td>
+      <td class="num">${r.hotel ? money(r.hotel.price_per_night, r.hotel.currency) : "—"}</td>
+      <td class="num">${r.nights}</td>
+      <td class="num"><b>${money(r.tripTotal, r.currency)}</b>${r.above_budget ? " ⚠" : ""}</td></tr>`).join("")}
+    </tbody></table></div>`;
+}
+
+function infoPanel(rep) {
+  const s = rep.stats;
+  const fx = rep.fx.length
+    ? rep.fx.map(f => `<dd>${esc(t("i_fx_v", { base: f.base, rate: f.rate, quote: f.quote, src: f.exchangeRateSource,
+        date: f.rate_date ?? "—", when: checked(f.exchangeRateCheckedAt) }))}</dd>`).join("")
+    : `<dd>${t("i_fx_none")}</dd>`;
+  return `<details class="panel"><summary><b>${t("info_summary")}</b></summary>
+    <dl class="kv" style="margin-top:10px">
+      ${Object.entries(rep.interpreted).map(([k, v]) => `<dt>${esc(t("i_" + k))}</dt><dd>${esc(v)}</dd>`).join("")}
+      <dt>${t("i_origin_cities")}</dt><dd>${esc(s.origin_cities_searched.join(", "))} (${t("i_of", { a: s.origin_cities_searched.length, b: s.origin_cities_available })})</dd>
+      <dt>${t("i_months")}</dt><dd>${esc(s.months_searched.join(", "))}</dd>
+      <dt>${t("i_found")}</dt><dd>${t("i_found_v", { n: s.destinations_discovered, k: s.candidate_destinations })}</dd>
+      <dt>${t("i_combos")}</dt><dd>${s.combinations_evaluated}</dd>
+      <dt>${t("i_api")}</dt><dd>${t("i_api_v", { net: s.api_requests, cache: s.api_cached, rl: s.rate_limited, sec: s.seconds })}</dd>
+      <dt>${t("i_fx")}</dt>${fx}
+    </dl>
+    ${rep.limits.length ? `<h3 style="margin-top:14px">${t("limits_h")}</h3><ul class="small">${rep.limits.map(l => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}
+    ${rep.providers.map(p => `<h3 style="margin-top:14px">${esc(p.name)}</h3>
+      <div class="small">${esc(p.message)}</div>
+      ${p.limitations.length ? `<ul class="small muted">${p.limitations.map(l => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}`).join("")}
+  </details>`;
+}
+
+function renderReport(rep) {
+  const res = rep.results;
+  const warn = rep.warnings.length ? `<div class="banner warn">${rep.warnings.map(esc).join("<br>")}</div>` : "";
+  if (!res.length) { $("#results").innerHTML = warn + infoPanel(rep); return; }
+  let html = warn;
+  if (mode === "trip") {
+    html += tripCard(res[0], t("cheapest_trip"), true);
+    if (rep.alternatives.length) html += `<h2 class="section-title">${esc(t("other_dates", { city: res[0].destination }))}</h2>
+      <div class="tiles">${rep.alternatives.map((r, i) => otherRow(r, "a" + i)).join("")}</div>`;
+    const mixed = res.some(r => r.total_includes_hotel) && res.some(r => !r.total_includes_hotel);
+    if (res.length > 1) html += `<h2 class="section-title">${t("other_dest")}</h2>
+      ${mixed ? `<div class="small muted" style="margin:-4px 0 12px">${t("mixed_note")}</div>` : ""}
+      <div class="tiles">${res.slice(1).map((r, i) => otherRow(r, i + 1)).join("")}</div>`;
+  } else {
+    html += `<h2 class="section-title">${t("dest_h")}</h2>
+      <div class="tiles">${res.map((r, i) => otherRow(r, i)).join("")}</div>`;
+  }
+  html += `<div id="detail" style="margin-top:16px"></div>
+    <h2 class="section-title">${t("compare_h")}</h2><div class="panel">${table(res)}</div>` + infoPanel(rep);
+  $("#results").innerHTML = html;
+  document.querySelectorAll(".other").forEach(el => el.addEventListener("click", () => {
+    const i = el.dataset.i;
+    const r = String(i).startsWith("a") ? rep.alternatives[Number(i.slice(1))] : res[Number(i)];
+    $("#detail").innerHTML = tripCard(r, t("option_k", { flag: r.flag }));
+    $("#detail").scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  document.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click", () => {
+    sort = { key: th.dataset.k, dir: sort.key === th.dataset.k ? -sort.dir : 1 };
+    renderReport(rep);
+  }));
+  renderLive();
+}
+
+// ── live price monitoring ───────────────────────────────────────────────────
+let watch = { watcher: null, legs: {} };
+function ago(iso) {
+  if (!iso) return t("ago_never");
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return t("ago_s", { n: s });
+  if (s < 3600) return t("ago_m", { n: Math.floor(s / 60) });
+  return t("ago_h", { n: Math.floor(s / 3600) });
+}
+const hms = iso => new Date(iso).toLocaleTimeString(locale());
+const signed = (d, cur) => `${d > 0 ? "+" : "−"}${money(Math.abs(d), cur)}`;
+const errText = e => e === "empty_answer" ? t("err_empty_answer") : e;
+
+function liveLine(leg) {
+  if (!leg) return ["pending", t("live_pending")];
+  const err = leg.last_error ? ` · ⚠ ${esc(errText(leg.last_error))}` : "";
+  const pin = leg.pinned ? " · 📌" : "";
+  if (leg.status === "gone") {
+    const alt = leg.alt_price != null
+      ? t("alt_now", { link: `<a href="${esc(leg.alt_url)}" target="_blank" rel="noopener">${money(leg.alt_price, leg.currency)}</a>` }) : "";
+    return ["gone", `${t("gone", { at: leg.last_change_at ? t("gone_at", { t: hms(leg.last_change_at) }) : "" })}${alt} · ${t("checked_ago", { ago: ago(leg.last_checked_at) })}${err}${pin}`];
+  }
+  const d = leg.price != null ? leg.price - leg.first_price : 0;
+  const price = Math.abs(d) >= 1
+    ? `${t("price_changed", { old: money(leg.first_price, leg.currency), new: money(leg.price, leg.currency) })} <span class="${d > 0 ? "up" : "down"}">(${signed(d, leg.currency)})</span>`
+    : t("price_same");
+  return [Math.abs(d) >= 1 ? "changed" : "ok",
+    `<span class="pulse"></span>${t("on_sale")} · ${price} · ${t("checked_ago", { ago: ago(leg.last_checked_at) })}${err}${pin}`];
+}
+
+function renderLive() {
+  document.querySelectorAll(".live[data-key]").forEach(el => {
+    const [cls, html] = liveLine(watch.legs[el.dataset.key]);
+    el.className = "live " + cls; el.innerHTML = html;
+  });
+  document.querySelectorAll("[data-live-total]").forEach(el => {
+    const o = watch.legs[el.dataset.out], r = watch.legs[el.dataset.ret];
+    const note = el.parentElement.querySelector(".live-note");
+    if (!o || !r) { note.textContent = ""; return; }
+    if (o.status === "gone" || r.status === "gone") {
+      note.innerHTML = `<span class="up">${t("total_gone")}</span>`;
+      return;
+    }
+    const diff = ((o.price ?? +el.dataset.outp) - +el.dataset.outp + (r.price ?? +el.dataset.retp) - +el.dataset.retp) * +el.dataset.ratio;
+    el.textContent = money(+el.dataset.base + diff, el.dataset.cur);
+    const older = [o.last_checked_at, r.last_checked_at].sort()[0];
+    note.innerHTML = Math.abs(diff) >= 1
+      ? `<span class="${diff > 0 ? "up" : "down"}">${t("total_updated", { d: signed(diff, el.dataset.cur) })}</span> · ${t("verified", { ago: ago(older) })}`
+      : `<span class="muted">${t("verified_ago", { ago: ago(older) })}</span>`;
+  });
+  document.querySelectorAll("button.pin").forEach(b => {
+    const on = isPinned(b.dataset.keys.split("\n"));
+    b.classList.toggle("on", on);
+    b.textContent = on ? t("pin_on") : t("pin_off");
+  });
+  renderWatchBar();
+  renderWatchTable();
+  renderTg();
+}
+
+function renderWatchBar() {
+  const w = watch.watcher, bar = $("#watchBar");
+  if (!w || !w.enabled) { bar.classList.add("hidden"); return; }
+  const n = Object.keys(watch.legs).length;
+  bar.classList.remove("hidden");
+  if (w.paused) {
+    const why = typeof w.paused === "object" ? t("paused_" + w.paused.key, { left: w.paused.left }) : w.paused;
+    bar.innerHTML = esc(t("paused", { why }));
+    return;
+  }
+  if (!n) { bar.innerHTML = esc(t("watch_idle", { s: w.interval })); return; }
+  const rot = w.last_groups_total > w.last_requests
+    ? t("watch_rot", { total: w.total_legs, req: w.last_requests, groups: w.last_groups_total }) : "";
+  const last = w.last_cycle_at
+    ? t("watch_last", { ago: ago(w.last_cycle_at), req: w.last_requests, sec: (w.last_cycle_ms / 1000).toFixed(1) }) +
+      (w.last_changed ? t("watch_changes", { n: w.last_changed }) : "") + (w.last_errors ? t("watch_errors", { n: w.last_errors }) : "")
+    : t("watch_first");
+  bar.innerHTML = `<span class="pulse"></span>${t("watch_bar", { s: w.interval, n, rot, last })}`;
+}
+
+function kindText(h, cur) {
+  if (h.kind === "price_up") return `<span class="up">▲ ${money(h.old_price, cur)} → ${money(h.new_price, cur)}</span>`;
+  if (h.kind === "price_down") return `<span class="down">▼ ${money(h.old_price, cur)} → ${money(h.new_price, cur)}</span>`;
+  if (h.kind === "gone") {
+    const note = h.note && /^\d+$/.test(h.note) ? t("cheapest_now", { price: money(Number(h.note), cur) }) : (h.note || "");
+    return `<span class="up">${t("k_gone")}</span>${note ? ` (${esc(note)})` : ""}`;
+  }
+  if (h.kind === "back") return `<span class="down">${t("k_back", { price: money(h.new_price, cur) })}</span>`;
+  return esc(h.kind);
+}
+
+function renderWatchTable() {
+  const legs = Object.values(watch.legs);
+  $("#watchPanel").classList.toggle("hidden", !legs.length);
+  if (!legs.length) return;
+  $("#watchTable").innerHTML = `<table><thead><tr><th>${t("w_route")}</th><th>${t("w_dep")}</th><th>${t("w_flight")}</th>
+    <th class="num">${t("w_stops")}</th><th class="num">${t("w_first")}</th><th class="num">${t("w_now")}</th><th>${t("w_status")}</th>
+    <th>${t("w_seen")}</th><th>${t("w_checked")}</th><th>${t("w_changes")}</th><th></th></tr></thead>
+    <tbody>${legs.map(l => {
+      const d = l.price != null ? l.price - l.first_price : 0;
+      return `<tr>
+        <td>${isPinned([l.key]) ? "📌 " : ""}${esc(l.origin_name)} → ${esc(l.destination_name)} <span class="muted small">${esc(l.origin_airport)}→${esc(l.destination_airport)}</span></td>
+        <td>${localDate(l.departure_at)} ${localTime(l.departure_at)}</td>
+        <td>${esc(l.airline || "")} ${esc(l.flight_number || "")}</td>
+        <td class="num">${l.stops}</td>
+        <td class="num">${money(l.first_price, l.currency)}</td>
+        <td class="num">${l.status === "gone" ? "—" : `<b>${money(l.price, l.currency)}</b>`}${Math.abs(d) >= 1 ? ` <span class="${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"}</span>` : ""}</td>
+        <td>${l.status === "gone" ? t("s_gone") : l.status === "available" ? t("s_sale") : "⏳"}${l.last_error ? ` <span title="${esc(errText(l.last_error))}">⚠</span>` : ""}</td>
+        <td>${ageBadge(l.price_seen_on)}</td>
+        <td>${ago(l.last_checked_at)} <span class="muted small">×${l.checks}</span></td>
+        <td class="small">${l.history.length ? l.history.map(h => `${hms(h.at)} ${kindText(h, l.currency)}`).join("<br>") : "<span class='muted'>—</span>"}</td>
+        <td><a href="${esc(l.booking_url)}" target="_blank" rel="noopener">${t("w_open")}</a></td></tr>`;
+    }).join("")}</tbody></table>`;
+}
+
+// Every visitor sees only their own tickets: the ones on this page plus the ones pinned in this browser.
+function myPins() {
+  try { return JSON.parse(localStorage.getItem("cheaptrip.pins") || "[]"); } catch (e) { return []; }
+}
+function savePins(keys) {
+  try { localStorage.setItem("cheaptrip.pins", JSON.stringify([...new Set(keys)].slice(-100))); } catch (e) { /* private mode */ }
+}
+function pageKeys() {
+  const keys = new Set(myPins());
+  document.querySelectorAll("[data-key]").forEach(el => keys.add(el.dataset.key));
+  document.querySelectorAll("[data-live-total]").forEach(el => { keys.add(el.dataset.out); keys.add(el.dataset.ret); });
+  (report ? [...report.results, ...report.alternatives] : []).forEach(r => { keys.add(r.outbound.watch_key); keys.add(r.return.watch_key); });
+  return [...keys];
+}
+async function refreshWatch() {
+  try {
+    const r = await (await fetch("/api/watch/state", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keys: pageKeys(), lang }) })).json();
+    watch = { watcher: r.watcher, legs: Object.fromEntries(r.legs.map(l => [l.key, l])) };
+    renderLive();
+  } catch (e) { /* server restarting: keep the last state on screen */ }
+}
+// Pins belong to this browser (another visitor's pin of the same ticket doesn't show here).
+function isPinned(keys) {
+  const mine = myPins();
+  return keys.every(k => mine.includes(k) && watch.legs[k]);
+}
+async function setPinned(keys, pinned) {
+  savePins(pinned ? [...myPins(), ...keys] : myPins().filter(k => !keys.includes(k)));
+  await fetch("/api/watch/pin", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ keys, pinned, tg: tgCode() }) });
+  refreshWatch();
+}
+
+// ── Telegram alerts ─────────────────────────────────────────────────────────
+// The browser keeps a random code; t.me/<bot>?start=<code> links it to the visitor's chat, and the
+// bot then reports changes of the tickets pinned in this browser.
+let tg = { enabled: false, bot: null, linked: false, waitUntil: 0 }, tgMemCode = null;
+function tgCode() {
+  try {
+    const c = localStorage.getItem("cheaptrip.tg");
+    if (c && /^[A-Za-z0-9_-]{16,64}$/.test(c)) return c;
+  } catch (e) { /* private mode */ }
+  if (!tgMemCode) {
+    const b = crypto.getRandomValues(new Uint8Array(24));
+    tgMemCode = btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    try { localStorage.setItem("cheaptrip.tg", tgMemCode); } catch (e) { /* private mode: this tab only */ }
+  }
+  return tgMemCode;
+}
+const tgLink = () => `https://t.me/${encodeURIComponent(tg.bot)}?start=${tgCode()}`;
+const tgWaiting = () => !tg.linked && Date.now() < tg.waitUntil;
+function setHtml(el, html) {  // rewrite only on change, so a link isn't replaced under the cursor
+  if (el._html !== html) { el._html = html; el.innerHTML = html; }
+}
+function renderTg() {
+  const on = tg.enabled && tg.bot;
+  document.querySelectorAll(".tg-slot").forEach(el => {
+    if (!on) return setHtml(el, "");
+    if (!tg.linked) {
+      return setHtml(el, `<a class="btn tg" href="${esc(tgLink())}" target="_blank" rel="noopener" data-keys="${esc(el.dataset.keys)}">${t("tg_connect")}</a>` +
+        (tgWaiting() ? `<div class="small muted">${t("tg_waiting")}</div>` : ""));
+    }
+    setHtml(el, `<div class="small tg-note">${isPinned(el.dataset.keys.split("\n")) ? t("tg_on_pinned") : t("tg_on_unpinned")}</div>`);
+  });
+  const line = $("#tgLine");
+  if (!on) return setHtml(line, "");
+  setHtml(line, tg.linked
+    ? `${t("tg_line_on")} <button class="linkish" type="button" id="tgUnlink">${t("tg_unlink")}</button>`
+    : `${t("tg_line_off")} <a class="tg-connect" href="${esc(tgLink())}" target="_blank" rel="noopener">${t("tg_link_btn")}</a>` +
+      (tgWaiting() ? ` · <span class="muted">${t("tg_waiting")}</span>` : ""));
+}
+async function refreshTg() {
+  try {
+    const r = await (await fetch("/api/tg/state", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: tgCode(), lang, pins: myPins() }) })).json();
+    tg = { ...tg, enabled: !!r.enabled, bot: r.bot, linked: !!r.linked };
+    if (tg.linked) tg.waitUntil = 0;
+    renderTg();
+  } catch (e) { /* server restarting */ }
+}
+
+document.addEventListener("click", async e => {
+  const b = e.target.closest("button.pin");
+  if (b) {
+    const keys = b.dataset.keys.split("\n");
+    return setPinned(keys, !isPinned(keys));
+  }
+  const c = e.target.closest("a.btn.tg, a.tg-connect");
+  if (c) {  // the link itself opens Telegram; meanwhile watch the trip and wait for /start
+    tg.waitUntil = Date.now() + 3 * 60 * 1000;
+    setTimeout(renderTg, 0);
+    if (c.dataset.keys) {
+      const keys = c.dataset.keys.split("\n");
+      if (!isPinned(keys)) setPinned(keys, true);
+    }
+    return;
+  }
+  if (e.target.closest("#tgUnlink")) {
+    await fetch("/api/tg/unlink", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: tgCode() }) });
+    refreshTg();
+  }
+});
+
+if (lang === "en") {  // a visitor who chose English last time
+  $("#origin").value = I18N.en.default_origin;
+  $("#destination").value = I18N.en.default_dest;
+}
+applyStatic();
+syncForm();
+loadStatus();
+refreshWatch();
+refreshTg();
+setInterval(refreshWatch, 3000);
+setInterval(renderLive, 1000);
+setInterval(() => { if (tgWaiting()) refreshTg(); }, 3000);
+setInterval(refreshTg, 30000);
+</script>
+</body>
+</html>
