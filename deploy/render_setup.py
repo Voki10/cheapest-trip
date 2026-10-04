@@ -131,13 +131,18 @@ def render_env(env: dict, gist_id: str, github_token: str) -> list[dict]:
     return [{"key": k, "value": v} for k, v in sorted(values.items())]
 
 
-def wait_live(rd: Api, service_id: str, url: str, since: float) -> None:
+def latest_deploy(rd: Api, service_id: str) -> dict:
+    deploys = rd.call("GET", f"/services/{service_id}/deploys", params={"limit": 1}).json()
+    return deploys[0]["deploy"] if deploys else {}
+
+
+def wait_live(rd: Api, service_id: str, url: str, since: float, previous: str | None = None) -> None:
+    """Wait for the newest deploy to go live; `previous` is the deploy that was live before ours."""
     print("== waiting for Render to build and start the site (usually 3–8 minutes)")
     last = None
     for _ in range(120):
-        deploys = rd.call("GET", f"/services/{service_id}/deploys", params={"limit": 1}).json()
-        deploy = deploys[0]["deploy"] if deploys else {}
-        status = deploy.get("status")
+        deploy = latest_deploy(rd, service_id)
+        status = deploy.get("status") if deploy.get("id") != previous else "waiting for the new deploy"
         if status != last:
             print(f"   deploy: {status}")
             last = status
@@ -167,7 +172,9 @@ def main() -> None:
     owner_id = rd.call("GET", "/owners", params={"limit": 20}).json()[0]["owner"]["id"]
     found = [s["service"] for s in rd.call("GET", "/services", params={"name": SERVICE, "limit": 20}).json()]
     env_vars = render_env(env, gist_id, github_token)
-    if found:  # settings first, so the deploy started by the push already has them
+    previous = None
+    if found:  # settings first, so the deploy below starts with them
+        previous = latest_deploy(rd, found[0]["id"]).get("id")
         rd.call("PUT", f"/services/{found[0]['id']}/env-vars", json=env_vars)
         print(f"== Render settings updated ({len(env_vars)} variables)")
 
@@ -183,10 +190,10 @@ def main() -> None:
         print(f"== created Render service {service['name']} ({len(env_vars)} variables)")
     else:
         service = found[0]
-        if not new_commit:  # nothing pushed, so no automatic deploy: start one for the new settings
-            rd.call("POST", f"/services/{service['id']}/deploys", json={})
-        time.sleep(10)  # let Render register the deploy the push started
-    wait_live(rd, service["id"], service["serviceDetails"]["url"], started)
+        # A public repo linked by URL sends Render no push events, so every update is deployed explicitly.
+        rd.call("POST", f"/services/{service['id']}/deploys", json={})
+        print(f"== deploy started ({'new code + settings' if new_commit else 'settings only'})")
+    wait_live(rd, service["id"], service["serviceDetails"]["url"], started, previous)
 
 
 if __name__ == "__main__":
