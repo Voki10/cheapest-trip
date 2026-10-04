@@ -51,6 +51,9 @@ body { margin: 0; color: var(--text); background: var(--page-bg); background-att
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
 input, select, button { font: inherit; }
+/* Selects are transparent and take the page's ink; the opened list is drawn by the OS on white,
+   so with the dark theme its options came out light on white. Always black on white. */
+option, optgroup { color: #0f1b2d; background: #ffffff; }
 
 /* ── top bar ── */
 .topbar { background: var(--hero-a); color: #fff; }
